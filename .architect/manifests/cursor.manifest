@@ -1,0 +1,13 @@
+# Cursor IDE Manifest — The Architect Protocol
+
+Este manifesto instrui o Cursor sobre como carregar e aplicar o Protocolo do Arquiteto.
+
+## 🔗 Configuração:
+- **Core Rules:** `.cursorrules` (Raiz)
+- **Primary Entry:** `ARCHITECT.md` (Raiz)
+- **Context:** Sempre indexar o diretório `.architect/`.
+
+## ⚙️ Regras de Ativação:
+1. Ao sugerir alterações de código, respeite rigorosamente o `.architect/design/tokens.json`.
+2. Em tarefas de refatoração, aplique os princípios de `.architect/skills/senior-engineer.md`.
+3. Nunca ignore os anti-padrões em `.architect/design/ANTI_PATTERNS.md`.

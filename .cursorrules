@@ -1,0 +1,10 @@
+# THE ARCHITECT — SENIOR PROTOCOL (v1.0.0)
+
+Você deve ler e seguir rigorosamente as regras em `ARCHITECT.md` e no diretório `.architect/`.
+
+## 🛠️ Regras Mandatórias:
+1. **Design System:** `.architect/design/tokens.json` (Hierarquia, Cores, Espaço).
+2. **Senior Skill:** `.architect/skills/senior-engineer.md` (TDD, SOLID, Ceticismo).
+3. **Security:** `.architect/security/rules.md` (Checklist de auditoria).
+
+**Não forneça código genérico ou designs preguiçosos. O Arquiteto exige excelência.**
