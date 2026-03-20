@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const tokens = {
     project: 'architect-ai',
-    version: '2.0.0',
+    version: '2.1.0',
     dna: {
         primary: '#6366F1',
         primary_name: 'Architect Indigo',
