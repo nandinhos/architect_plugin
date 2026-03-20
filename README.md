@@ -1,70 +1,114 @@
-# 🏗️ The Architect — Elite Engineering Plugin
+# 🏗️ Architect Engine — v2.1
 
-[![Protocol: Architect Sinistro](https://img.shields.io/badge/Protocol-Architect%20Sinistro-blueviolet?style=for-the-badge)](./ARCHITECT.md)
-[![Status: Production Ready](https://img.shields.io/badge/Status-Production%20Ready-success?style=for-the-badge)](./docs/plans/architect/04_showcase.md)
+> **"Código gerado por IA sem validação é технический долг."**
 
-> **"Eu sou O Arquiteto. Eu não gero código; eu construo sistemas."**
-
-O `architect-plugin` não é apenas um conjunto de instruções, é um **Engine de Comportamento Sênior** que força qualquer agente de IA (Gemini CLI, Claude Code, Cursor) a operar sob o rigor de 30 anos de experiência em engenharia.
+**Uma linha. Qualquer projeto. Engenheiro Sênior automático.**
 
 ---
 
-## ⚡ Superpoderes Ativos
+## ⚡ Instalação (30 segundos)
 
-Este repositório está equipado com um ecossistema de elite:
+```bash
+curl -fsSL https://raw.githubusercontent.com/nandinhos/architect_plugin/main/install.sh | sh
+```
 
-- **🚀 Metodologias Rígidas (Superpowers):** TDD mandatório, Brainstorming e Git Worktrees como padrão.
-- **🛡️ Auditoria de Segurança:** Varreduras SAST/Taint integradas em cada commit crítico.
-- **🎼 Orquestração de Tracks (Conductor):** Planos de execução documentados antes de tocar no código.
-- **💎 Design as Code (Frontend Design):** DNA visual inquebrável que elimina o "visual genérico de IA".
-- **🔍 Code Review Sênior:** Validação automática contra Clean Code e SOLID.
+Pronto. Funciona em qualquer projeto Node.js.
 
 ---
 
-## 🏗️ Arquitetura do Protocolo
+## 🚀 Uso (3 comandos)
 
-O projeto é regido pelo diretório `.architect/`, que atua como o cérebro do sistema:
+```bash
+# 1. Inicializar no projeto
+architect init
 
-```text
-.architect/
-├── design/         # DNA Visual (Tokens, Princípios, Blacklist)
-├── security/       # Regras de Defesa e Auditoria
-├── skills/         # Master Skill (O comportamento do Engenheiro Sênior)
-└── manifests/      # Integração com Gemini, Cursor e Claude
+# 2. Analisar qualquer arquivo
+architect run src/utils.ts
+
+# 3. Analisar tudo que vai ser commitado
+architect staged
+
+# 4. Output JSON para CI/CD
+architect run src/ --json
 ```
 
 ---
 
-## 🛠️ Início Rápido (Desenvolvimento)
+## 🔒 O que ele bloqueia
 
-Se você deseja continuar o desenvolvimento deste plugin em sua máquina:
+```
+architect run src/db.ts
+```
 
-1.  **Clone o repositório:**
-    ```bash
-    git clone https://github.com/nandinhos/architect_plugin.git
-    cd architect_plugin
-    ```
+```
+🔴 [SEC-001] SQL Injection detectado
+   [src/db.ts:12]
 
-2.  **Verifique os Pré-requisitos:**
-    Execute o script de prontidão do Arquiteto:
-    ```bash
-    node scripts/check-readiness.js
-    ```
+⛔ BLOQUEADO: Corrija issues critical antes de continuar.
+```
 
-3.  **Ative o Protocolo:**
-    Ao abrir o Gemini CLI, o arquivo `GEMINI.md` carregará automaticamente o contexto do Arquiteto.
+O engine avalia **6 regras** automaticamente:
 
----
-
-## 📜 Regras de Ouro
-
-1.  **Código sem teste é apenas um palpite.**
-2.  **Se a UI for feia, o código está incompleto.**
-3.  **Segurança não é um add-on, é o alicerce.**
-4.  **Contexto é Rei: Sempre valide APIs modernas via Context7.**
+| Regra | Severidade | O que detecta |
+|-------|-----------|---------------|
+| SEC-001 | 🔴 critical | SQL Injection (concatenação de strings) |
+| SEC-002 | 🔴 critical | eval, exec, new Function |
+| TEST-001 | 🟠 high | Arquivo sem teste |
+| CQ-001 | 🟠 high | **Funções >50 linhas, `any`, nomes genéricos** (via TypeScript AST) |
+| LOG-001 | 🟡 medium | console.log em produção |
+| DES-001 | ⚪ low | Cores hardcoded, gradientes genéricos |
 
 ---
 
-## 👨‍💻 Desenvolvido por
-**Nando Dev** — [nandinhos@gmail.com](mailto:nandinhos@gmail.com)
-Operando sob o Protocolo do Arquiteto Sinistro.
+## 🏗️ Arquitetura
+
+```
+RuleEngine          → Executa regras por trigger
+  └── RuleRegistry  → Registro e filtro
+       └── DecisionEngine → BLOCK / WARN / OK
+```
+
+**CQ-001** usa **TypeScript Compiler API (AST)** — não regex.
+Detecta `any`, funções longas, nomes genéricos e arquivos >300 linhas com precisão de parser real.
+
+---
+
+## 📦 Output JSON (CI/CD)
+
+```bash
+architect run src/ --json
+```
+
+```json
+{
+  "status": "blocked",
+  "filesAnalyzed": 5,
+  "summary": {
+    "critical": 1,
+    "high": 2,
+    "medium": 0,
+    "low": 3
+  }
+}
+```
+
+---
+
+## 🧪 Qualidade
+
+```
+npm test         → 29/29 passing ✅
+npm run lint     → 0 errors ✅
+npm run typecheck → 0 errors ✅
+npm audit        → 0 vulnerabilities ✅
+```
+
+---
+
+## Desenvolvido por
+
+**Nando Dev** — sob o **Protocolo do Arquiteto Sinistro**.
+
+```
+"Eu sou O Arquiteto. Eu não gero código; eu construo sistemas."
+```
