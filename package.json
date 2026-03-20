@@ -1,21 +1,53 @@
 {
   "name": "architect_plugin",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Engine de Comportamento Sênior para Agentes de IA — força rigor de design, segurança e TDD",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    ".architect",
+    "ARCHITECT.md"
+  ],
   "directories": {
     "doc": "docs"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc",
+    "prepublishOnly": "npm run build",
+    "prepare": "husky",
+    "test": "jest",
+    "test:coverage": "jest --coverage",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src/ --ext .ts",
+    "lint:fix": "eslint src/ --ext .ts --fix",
+    "format": "prettier --write \"src/**/*.ts\""
   },
-  "keywords": [],
-  "author": "",
+  "lint-staged": {
+    "src/**/*.ts": [
+      "eslint --fix",
+      "prettier --write"
+    ]
+  },
+  "keywords": [
+    "architect",
+    "ai-agent",
+    "senior-engineer",
+    "design-system",
+    "tdd"
+  ],
+  "author": "Nando Dev <nandinhos@gmail.com>",
   "license": "ISC",
   "type": "commonjs",
   "devDependencies": {
     "@types/jest": "^30.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
+    "eslint": "^9.0.0",
+    "husky": "^9.0.0",
     "jest": "^30.3.0",
+    "lint-staged": "^15.0.0",
+    "prettier": "^3.0.0",
     "ts-jest": "^29.4.6",
     "typescript": "^5.9.3"
   }

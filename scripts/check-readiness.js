@@ -1,12 +1,12 @@
 const { execSync } = require('child_process');
+const fs = require('fs');
+const path = require('path');
 
 /**
  * Script de Verificação de Prontidão do Arquiteto
- * Versão: 1.0.0
- * Autor: Arquiteto Sinistro
+ * Versão: 1.1.0
  */
 
-const REQUIRED_EXTENSIONS = ['superpowers', 'gemini-cli-security', 'code-review', 'conductor', 'context7'];
 const COLORS = {
   reset: "\x1b[0m",
   bright: "\x1b[1m",
@@ -29,52 +29,39 @@ function checkCommand(command, name) {
   }
 }
 
-function checkExtensions() {
-  try {
-    const listRaw = execSync('gemini --list-extensions 2>&1', { encoding: 'utf8' });
-    const list = listRaw.toLowerCase().replace(/[^a-z0-9]/g, '');
-    let allOk = true;
-    REQUIRED_EXTENSIONS.forEach(ext => {
-      const normalizedExt = ext.toLowerCase().replace(/[^a-z0-9]/g, '');
-      if (list.includes(normalizedExt)) {
-        console.log(`${COLORS.green}✅ Extensão "${ext}" instalada.${COLORS.reset}`);
-      } else {
-        console.log(`${COLORS.yellow}⚠️  Extensão "${ext}" AUSENTE.${COLORS.reset}`);
-        allOk = false;
-      }
-    });
-    return allOk;
-  } catch (e) {
-    console.log(`${COLORS.red}❌ Erro ao listar extensões do Gemini CLI.${COLORS.reset}`);
-    return false;
-  }
+function checkProtocolFiles() {
+  const essentialPaths = [
+    '.architect/design/tokens.json',
+    '.architect/skills/senior-engineer.md',
+    '.architect/security/rules.md',
+    'ARCHITECT.md'
+  ];
+
+  let allOk = true;
+  essentialPaths.forEach(p => {
+    if (fs.existsSync(p)) {
+      console.log(`${COLORS.green}✅ Arquivo do protocolo encontrado: ${p}${COLORS.reset}`);
+    } else {
+      console.log(`${COLORS.red}❌ Arquivo do protocolo AUSENTE: ${p}${COLORS.reset}`);
+      allOk = false;
+    }
+  });
+  return allOk;
 }
 
 const nodeOk = checkCommand('node -v', 'Node.js');
 const gitOk = checkCommand('git --version', 'Git');
-const geminiOk = checkCommand('gemini --version', 'Gemini CLI');
+const jestOk = fs.existsSync('node_modules') ? checkCommand('npm test -- --version', 'Jest') : true;
 
 console.log("");
-const extensionsOk = geminiOk ? checkExtensions() : false;
+const protocolOk = checkProtocolFiles();
 
 console.log("\n--- Resultado Final ---");
 
-if (nodeOk && gitOk && geminiOk && extensionsOk) {
+if (nodeOk && gitOk && protocolOk) {
   console.log(`${COLORS.bright}${COLORS.green}AMBIENTE PRONTO PARA O ARQUITETO SINISTRO! 🚀${COLORS.reset}`);
   console.log("Você pode prosseguir com o desenvolvimento sênior.");
 } else {
   console.log(`${COLORS.bright}${COLORS.red}AMBIENTE NÃO ATENDE AOS PRÉ-REQUISITOS!${COLORS.reset}`);
-  console.log("\nOrientações:");
-  
-  if (!geminiOk) {
-    console.log("1. Instale o Gemini CLI: npm install -g @google/gemini-cli");
-  }
-  
-  if (!extensionsOk) {
-    console.log("2. Instale as extensões ausentes via Gemini CLI:");
-    console.log("   gemini extensions install <url-do-github>");
-    console.log("\nSugestão: Peça à sua IA para realizar as instalações pendentes.");
-  }
-  
   process.exit(1);
 }

@@ -1,13 +1,9 @@
 # Gemini CLI Manifest — The Architect Protocol
 
-Este manifesto define como o Gemini CLI deve carregar e aplicar o Protocolo do Arquiteto.
-
-## 🔗 Vinculação de Contexto:
+## 🔗 Vinculação de Contexto
 - **Primary Entry:** `ARCHITECT.md`
 - **Global Skill:** `.architect/skills/senior-engineer.md`
 - **Design Context:** `.architect/design/tokens.json`
 
-## ⚙️ Configurações de Operação:
-1. Sempre verifique o diretório `docs/plans/architect/` antes de iniciar uma nova track.
-2. Em caso de conflito entre instruções do usuário e o `ARCHITECT.md`, o protocolo tem precedência (ALERTAR o usuário).
-3. Utilize a ferramenta `Context7` obrigatoriamente para validação de APIs externas.
+## ⚙️ Regra de Ouro
+Consulte sempre `ARCHITECT.md` antes de qualquer tarefa técnica.

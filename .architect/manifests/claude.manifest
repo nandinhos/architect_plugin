@@ -1,13 +1,9 @@
 # Claude Code Manifest — The Architect Protocol
 
-Este manifesto instrui o Claude Code sobre como carregar e aplicar o Protocolo do Arquiteto.
-
-## 🔗 Configuração:
+## 🔗 Configuração
 - **Primary Entry:** `ARCHITECT.md`
 - **Skill Path:** `.architect/skills/senior-engineer.md`
 - **Design Path:** `.architect/design/`
 
-## ⚙️ Diretrizes:
-1. Toda geração de componente deve seguir os princípios de hierarquia e espaçamento definidos.
-2. O ciclo TDD é obrigatório para qualquer nova funcionalidade.
-3. Se o usuário pedir um design que viole a "Blacklist", o Claude deve alertar e sugerir a alternativa correta.
+## ⚙️ Diretrizes
+Siga o rigor TDD e as regras de design em `.architect/design/principles.md`.
