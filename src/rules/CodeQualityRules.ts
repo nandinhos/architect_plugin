@@ -1,167 +1,68 @@
 import type { BehaviorRule, RuleContext, RuleResult, Issue } from '../types';
+import { analyze } from './ASTAnalyzer';
 
-const MAX_FUNCTION_LINES = 50;
-const MAX_LINES_PER_FILE = 300;
-
-const GENERIC_NAMES = [
-  'data', 'info', 'temp', 'tmp', 'result', 'res', 'obj', 'item',
-  'value', 'val', 'array', 'arr', 'dict', 'map', 'table',
-];
-
-function detectLongFunctions(code: string, file: string): Issue[] {
-  const issues: Issue[] = [];
-  const lines = code.split('\n');
-  let functionStart = -1;
-  let braceCount = 0;
-  let functionName = '';
-
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-
-    if (/^(export\s+)?(async\s+)?function\s+\w+/.test(line) || /^(export\s+)?(async\s+)?const\s+\w+\s*=\s*(async\s+)?\(/.test(line)) {
-      functionStart = i;
-      const match = line.match(/(?:function|const)\s+(\w+)/);
-      functionName = match ? match[1] : `anonymous at line ${i + 1}`;
-      braceCount = 0;
-    }
-
-    if (functionStart !== -1) {
-      braceCount += (line.match(/{/g) || []).length;
-      braceCount -= (line.match(/}/g) || []).length;
-
-      if (braceCount === 0 && functionStart !== -1) {
-        const functionLength = i - functionStart + 1;
-
-        if (functionLength > MAX_FUNCTION_LINES) {
-          issues.push({
-            code: 'CQ-001',
-            message: `Função "${functionName}" tem ${functionLength} linhas (máximo: ${MAX_FUNCTION_LINES}). Refatore.`,
-            line: functionStart + 1,
-            severity: 'medium',
-            file,
-          });
-        }
-
-        functionStart = -1;
-      }
-    }
-  }
-
-  return issues;
-}
-
-function detectGenericNames(code: string, file: string): Issue[] {
-  const issues: Issue[] = [];
-  const lines = code.split('\n');
-
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-
-    for (const name of GENERIC_NAMES) {
-      const patterns = [
-        new RegExp(`\\bconst\\s+${name}\\s*=`),
-        new RegExp(`\\blet\\s+${name}\\s*=`),
-        new RegExp(`\\bfunction\\s+${name}\\s*\\(`),
-      ];
-
-      for (const pattern of patterns) {
-        if (pattern.test(line)) {
-          issues.push({
-            code: 'CQ-002',
-            message: `Nome genérico "${name}" detectado. Use nomes descritivos: ${name} → ${suggestBetterName(name)}`,
-            line: i + 1,
-            severity: 'low',
-            file,
-          });
-        }
-      }
-    }
-  }
-
-  return issues;
-}
-
-function detectExplicitAny(code: string, file: string): Issue[] {
-  const issues: Issue[] = [];
-  const lines = code.split('\n');
-
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-
-    if (/\b: any\b/.test(line) || /\bany\[\]/.test(line)) {
-      issues.push({
-        code: 'CQ-003',
-        message: 'Uso explícito de "any" detectado. Use tipos específicos ou unknown.',
-        line: i + 1,
-        severity: 'medium',
-        file,
-      });
-    }
-  }
-
-  return issues;
-}
-
-function detectLongFiles(code: string, file: string): Issue[] {
-  const lineCount = code.split('\n').length;
-
-  if (lineCount > MAX_LINES_PER_FILE) {
-    return [{
-      code: 'CQ-004',
-      message: `Arquivo com ${lineCount} linhas (máximo: ${MAX_LINES_PER_FILE}). Considere dividir.`,
-      severity: 'medium',
-      file,
-    }];
-  }
-
-  return [];
-}
-
-function suggestBetterName(generic: string): string {
-  const map: Record<string, string> = {
-    data: 'userData, responseData, apiResponse',
-    info: 'userInfo, systemInfo, errorInfo',
-    temp: 'temporaryCache, transientState',
-    tmp: 'transientBuffer, sessionCache',
-    result: 'calculationResult, queryResult',
-    res: 'httpResponse, apiResponse',
-    obj: 'userObject, configObject',
-    item: 'cartItem, listItem, menuItem',
-    value: 'inputValue, selectedValue',
-    val: 'inputValue, numericValue',
-    array: 'userList, itemList, idList',
-    arr: 'processedItems, filteredResults',
-    dict: 'configMap, lookupTable',
-    map: 'userMap, roleMap, countryMap',
-    table: 'dataTable, lookupTable',
-  };
-
-  return map[generic] || 'moreDescriptiveName';
+function astToIssues(report: NonNullable<ReturnType<typeof analyze>>, filePath: string): Issue[] {
+  return report.issues.map(issue => ({
+    code: issue.code,
+    message: issue.message,
+    line: issue.location.line,
+    severity: issue.severity,
+    file: filePath,
+  }));
 }
 
 export function createAntiPatternRule(): BehaviorRule {
   return {
     id: 'CQ-001',
-    name: 'Anti-Pattern Detection',
+    name: 'Anti-Pattern Detection (AST)',
     trigger: 'after_generation',
     severity: 'high',
-    description: 'Detecta funções longas, nomes genéricos, uso de any e arquivos muito longos',
+    description: 'Detecta funções longas, nomes genéricos e uso de any via TypeScript AST',
 
     validate(context: RuleContext): RuleResult {
-      const { code, filePath } = context;
+      const { code, filePath, language } = context;
 
-      const allIssues: Issue[] = [
-        ...detectLongFunctions(code, filePath),
-        ...detectGenericNames(code, filePath),
-        ...detectExplicitAny(code, filePath),
-        ...detectLongFiles(code, filePath),
-      ];
+      if (language !== 'typescript' && language !== 'javascript') {
+        return { ruleId: 'CQ-001', ruleName: 'Anti-Pattern Detection', valid: true, issues: [] };
+      }
+
+      const report = analyze(code, filePath);
+
+      if (!report) {
+        return {
+          ruleId: 'CQ-001',
+          ruleName: 'Anti-Pattern Detection',
+          valid: true,
+          issues: [{
+            code: 'CQ-001',
+            message: 'AST parsing failed — arquivo pode não ser TypeScript válido. Pulando análise AST.',
+            severity: 'low',
+            file: filePath,
+          }],
+        };
+      }
+
+      const issues = astToIssues(report, filePath);
 
       return {
         ruleId: 'CQ-001',
-        ruleName: 'Anti-Pattern Detection',
-        valid: allIssues.length === 0,
-        issues: allIssues,
+        ruleName: 'Anti-Pattern Detection (AST)',
+        valid: issues.length === 0,
+        issues,
+      };
+    },
+
+    enforce(context, result) {
+      if (result.valid || result.issues.length === 0) return null;
+
+      const suggestions = result.issues
+        .filter(i => i.severity === 'medium' || i.severity === 'high')
+        .map(i => i.message)
+        .filter((msg, idx, arr) => arr.indexOf(msg) === idx);
+
+      return {
+        fixed: false,
+        suggestions,
       };
     },
   };

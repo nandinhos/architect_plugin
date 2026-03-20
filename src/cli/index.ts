@@ -54,8 +54,13 @@ function getFileDiff(filename: string): string {
   }
 }
 
-function printReport(result: ReturnType<typeof ENGINE.runSync>, verbose = false): void {
+function printReport(result: ReturnType<typeof ENGINE.runSync>, verbose = false, asJson = false): void {
   const { status, issues, summary, rulesEvaluated } = result;
+
+  if (asJson) {
+    console.log(JSON.stringify(result, null, 2));
+    return;
+  }
 
   console.log('\n' + '='.repeat(60));
   console.log(`  🔍 Architect Engine — Report`);
@@ -91,13 +96,12 @@ function printReport(result: ReturnType<typeof ENGINE.runSync>, verbose = false)
 
   if (status === 'blocked') {
     console.log('  ⛔ BLOQUEADO: Corrija os issues critical antes de prosseguir.');
-    process.exit(1);
   } else if (status === 'warned') {
     console.log('  ⚠️  ATENÇÃO: Issues de alta/média severidade detectados.');
   }
 }
 
-function runOnFile(filePath: string): void {
+function runOnFile(filePath: string, asJson = false): void {
   let code: string;
   try {
     code = readFileSync(filePath, 'utf8');
@@ -107,20 +111,32 @@ function runOnFile(filePath: string): void {
 
   const context = buildContext(filePath, code);
   const result = ENGINE.runSync(context, 'after_generation');
+
+  if (asJson) {
+    printReport(result, false, true);
+    if (result.status === 'blocked') process.exit(1);
+    return;
+  }
+
   printReport(result, true);
+  if (result.status === 'blocked') process.exit(1);
 }
 
-function runOnStaged(): void {
+function runOnStaged(asJson = false): void {
   const files = getStagedDiff().trim().split('\n').filter(Boolean);
 
   if (files.length === 0) {
-    console.log('  📂 Nenhum arquivo em staging.');
+    if (asJson) {
+      console.log(JSON.stringify({ status: 'ok', issues: [], filesAnalyzed: 0 }, null, 2));
+    } else {
+      console.log('  📂 Nenhum arquivo em staging.');
+    }
     return;
   }
 
   const supportedExts = ['.ts', '.tsx', '.js', '.jsx', '.html', '.css'];
-
   let hasBlocking = false;
+  const allResults: ReturnType<typeof ENGINE.runSync>[] = [];
 
   for (const file of files) {
     const ext = extname(file);
@@ -131,17 +147,32 @@ function runOnStaged(): void {
 
     const context = buildContext(file, diff);
     const result = ENGINE.runSync(context, 'pre_commit');
-    printReport(result, true);
+    allResults.push(result);
+
+    if (!asJson) printReport(result, true);
 
     if (result.status === 'blocked') hasBlocking = true;
   }
 
-  if (hasBlocking) {
-    process.exit(1);
+  if (asJson) {
+    const aggregated = {
+      status: hasBlocking ? 'blocked' : 'ok',
+      filesAnalyzed: allResults.length,
+      results: allResults,
+      summary: {
+        critical: allResults.reduce((s, r) => s + r.summary.critical, 0),
+        high: allResults.reduce((s, r) => s + r.summary.high, 0),
+        medium: allResults.reduce((s, r) => s + r.summary.medium, 0),
+        low: allResults.reduce((s, r) => s + r.summary.low, 0),
+      },
+    };
+    console.log(JSON.stringify(aggregated, null, 2));
   }
+
+  if (hasBlocking) process.exit(1);
 }
 
-function runOnDir(dirPath: string): void {
+function runOnDir(dirPath: string, asJson = false): void {
   let files: string[] = [];
 
   try {
@@ -152,6 +183,7 @@ function runOnDir(dirPath: string): void {
   }
 
   const supportedExts = ['.ts', '.tsx', '.js', '.jsx'];
+  const allResults: ReturnType<typeof ENGINE.runSync>[] = [];
 
   for (const file of files) {
     const full = join(dirPath, file);
@@ -164,25 +196,51 @@ function runOnDir(dirPath: string): void {
     const ext = extname(file);
     if (!supportedExts.includes(ext)) continue;
 
-    runOnFile(full);
+    let code: string;
+    try {
+      code = readFileSync(full, 'utf8');
+    } catch {
+      continue;
+    }
+
+    const context = buildContext(full, code);
+    const result = ENGINE.runSync(context, 'after_generation');
+    allResults.push(result);
+
+    if (!asJson) printReport(result, true);
+  }
+
+  if (asJson) {
+    console.log(JSON.stringify({
+      status: allResults.some(r => r.status === 'blocked') ? 'blocked' : 'ok',
+      filesAnalyzed: allResults.length,
+      results: allResults,
+      summary: {
+        critical: allResults.reduce((s, r) => s + r.summary.critical, 0),
+        high: allResults.reduce((s, r) => s + r.summary.high, 0),
+        medium: allResults.reduce((s, r) => s + r.summary.medium, 0),
+        low: allResults.reduce((s, r) => s + r.summary.low, 0),
+      },
+    }, null, 2));
   }
 }
 
 const args = process.argv.slice(2);
 const command = args[0];
+const asJson = args.includes('--json');
 
 switch (command) {
   case 'run': {
     const target = args[1];
     if (!target) {
-      console.log('Usage: architect run <file|directory>');
+      console.log('Usage: architect run <file|directory> [--json]');
       process.exit(1);
     }
     try {
       if (statSync(target).isDirectory()) {
-        runOnDir(target);
+        runOnDir(target, asJson);
       } else {
-        runOnFile(target);
+        runOnFile(target, asJson);
       }
     } catch {
       console.error(`Target not found: ${target}`);
@@ -192,7 +250,7 @@ switch (command) {
   }
 
   case 'staged':
-    runOnStaged();
+    runOnStaged(asJson);
     break;
 
   case 'rules':

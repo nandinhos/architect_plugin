@@ -1,6 +1,6 @@
-# 🏗️ Architect Engine — v2.0
+# 🏗️ Architect Engine — v2.1
 
-> **"Código gerado por IA sem validação é Doidera, e Doidera vira dívida."**
+> **"Código gerado por IA sem validação é технический долг."**
 
 **Uma linha. Qualquer projeto. Engenheiro Sênior automático.**
 
@@ -27,6 +27,9 @@ architect run src/utils.ts
 
 # 3. Analisar tudo que vai ser commitado
 architect staged
+
+# 4. Output JSON para CI/CD
+architect run src/ --json
 ```
 
 ---
@@ -51,7 +54,7 @@ O engine avalia **6 regras** automaticamente:
 | SEC-001 | 🔴 critical | SQL Injection (concatenação de strings) |
 | SEC-002 | 🔴 critical | eval, exec, new Function |
 | TEST-001 | 🟠 high | Arquivo sem teste |
-| CQ-001 | 🟠 high | Funções >50 linhas, `any`, nomes genéricos |
+| CQ-001 | 🟠 high | **Funções >50 linhas, `any`, nomes genéricos** (via TypeScript AST) |
 | LOG-001 | 🟡 medium | console.log em produção |
 | DES-001 | ⚪ low | Cores hardcoded, gradientes genéricos |
 
@@ -65,67 +68,28 @@ RuleEngine          → Executa regras por trigger
        └── DecisionEngine → BLOCK / WARN / OK
 ```
 
----
-
-## 📦 API
-
-```ts
-import { ArchitectEngine, createSQLInjectionRule } from 'architect-ai';
-
-const engine = new ArchitectEngine({ failOn: 'high' });
-engine.registerRule(createSQLInjectionRule());
-
-const result = engine.runSync({
-  code: 'db.query("SELECT * FROM users WHERE id = " + id)',
-  filePath: 'src/db.ts',
-  fileName: 'db.ts',
-  language: 'typescript',
-  metadata: {},
-}, 'after_generation');
-
-// result.status: 'blocked' | 'warned' | 'ok'
-```
+**CQ-001** usa **TypeScript Compiler API (AST)** — não regex.
+Detecta `any`, funções longas, nomes genéricos e arquivos >300 linhas com precisão de parser real.
 
 ---
 
-## 🧩 Extensível
+## 📦 Output JSON (CI/CD)
 
-Crie regras customizadas em 10 linhas:
-
-```ts
-import { createRule } from 'architect-ai';
-
-export const noTodo = createRule({
-  id: 'MY-001',
-  name: 'No TODO',
-  trigger: 'after_generation',
-  severity: 'high',
-  validate(ctx) {
-    const has = ctx.code.includes('TODO');
-    return {
-      ruleId: 'MY-001', ruleName: 'No TODO',
-      valid: !has,
-      issues: has ? [{ code: 'MY-001', message: 'TODO encontrado', severity: 'high', file: ctx.filePath }] : [],
-    };
-  },
-});
+```bash
+architect run src/ --json
 ```
 
----
-
-## 📁 Estrutura
-
-```
-.architect/           ← Gerado pelo init
-├── tokens.json       ← DNA do projeto (cores, tipografia)
-└── config.json       ← Quais regras ativas
-
-bin/architect.js      ← CLI (instalado globalmente)
-src/
-├── engine/           ← RuleEngine, RuleRegistry, DecisionEngine
-├── rules/            ← 6 regras MVP
-├── cli/              ← Entry point CLI
-└── types.ts          ← BehaviorRule, Issue, etc.
+```json
+{
+  "status": "blocked",
+  "filesAnalyzed": 5,
+  "summary": {
+    "critical": 1,
+    "high": 2,
+    "medium": 0,
+    "low": 3
+  }
+}
 ```
 
 ---
@@ -133,7 +97,7 @@ src/
 ## 🧪 Qualidade
 
 ```
-npm test         → 18/18 passing ✅
+npm test         → 29/29 passing ✅
 npm run lint     → 0 errors ✅
 npm run typecheck → 0 errors ✅
 npm audit        → 0 vulnerabilities ✅

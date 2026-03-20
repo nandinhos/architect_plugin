@@ -56,8 +56,12 @@ function getFileDiff(filename) {
         return '';
     }
 }
-function printReport(result, verbose = false) {
+function printReport(result, verbose = false, asJson = false) {
     const { status, issues, summary, rulesEvaluated } = result;
+    if (asJson) {
+        console.log(JSON.stringify(result, null, 2));
+        return;
+    }
     console.log('\n' + '='.repeat(60));
     console.log(`  🔍 Architect Engine — Report`);
     console.log('='.repeat(60));
@@ -87,13 +91,12 @@ function printReport(result, verbose = false) {
     console.log('');
     if (status === 'blocked') {
         console.log('  ⛔ BLOQUEADO: Corrija os issues critical antes de prosseguir.');
-        process.exit(1);
     }
     else if (status === 'warned') {
         console.log('  ⚠️  ATENÇÃO: Issues de alta/média severidade detectados.');
     }
 }
-function runOnFile(filePath) {
+function runOnFile(filePath, asJson = false) {
     let code;
     try {
         code = (0, fs_1.readFileSync)(filePath, 'utf8');
@@ -103,16 +106,30 @@ function runOnFile(filePath) {
     }
     const context = buildContext(filePath, code);
     const result = ENGINE.runSync(context, 'after_generation');
+    if (asJson) {
+        printReport(result, false, true);
+        if (result.status === 'blocked')
+            process.exit(1);
+        return;
+    }
     printReport(result, true);
+    if (result.status === 'blocked')
+        process.exit(1);
 }
-function runOnStaged() {
+function runOnStaged(asJson = false) {
     const files = getStagedDiff().trim().split('\n').filter(Boolean);
     if (files.length === 0) {
-        console.log('  📂 Nenhum arquivo em staging.');
+        if (asJson) {
+            console.log(JSON.stringify({ status: 'ok', issues: [], filesAnalyzed: 0 }, null, 2));
+        }
+        else {
+            console.log('  📂 Nenhum arquivo em staging.');
+        }
         return;
     }
     const supportedExts = ['.ts', '.tsx', '.js', '.jsx', '.html', '.css'];
     let hasBlocking = false;
+    const allResults = [];
     for (const file of files) {
         const ext = (0, path_1.extname)(file);
         if (!supportedExts.includes(ext))
@@ -122,15 +139,30 @@ function runOnStaged() {
             continue;
         const context = buildContext(file, diff);
         const result = ENGINE.runSync(context, 'pre_commit');
-        printReport(result, true);
+        allResults.push(result);
+        if (!asJson)
+            printReport(result, true);
         if (result.status === 'blocked')
             hasBlocking = true;
     }
-    if (hasBlocking) {
-        process.exit(1);
+    if (asJson) {
+        const aggregated = {
+            status: hasBlocking ? 'blocked' : 'ok',
+            filesAnalyzed: allResults.length,
+            results: allResults,
+            summary: {
+                critical: allResults.reduce((s, r) => s + r.summary.critical, 0),
+                high: allResults.reduce((s, r) => s + r.summary.high, 0),
+                medium: allResults.reduce((s, r) => s + r.summary.medium, 0),
+                low: allResults.reduce((s, r) => s + r.summary.low, 0),
+            },
+        };
+        console.log(JSON.stringify(aggregated, null, 2));
     }
+    if (hasBlocking)
+        process.exit(1);
 }
-function runOnDir(dirPath) {
+function runOnDir(dirPath, asJson = false) {
     let files = [];
     try {
         files = (0, fs_1.readdirSync)(dirPath);
@@ -140,6 +172,7 @@ function runOnDir(dirPath) {
         return;
     }
     const supportedExts = ['.ts', '.tsx', '.js', '.jsx'];
+    const allResults = [];
     for (const file of files) {
         const full = (0, path_1.join)(dirPath, file);
         try {
@@ -152,24 +185,49 @@ function runOnDir(dirPath) {
         const ext = (0, path_1.extname)(file);
         if (!supportedExts.includes(ext))
             continue;
-        runOnFile(full);
+        let code;
+        try {
+            code = (0, fs_1.readFileSync)(full, 'utf8');
+        }
+        catch {
+            continue;
+        }
+        const context = buildContext(full, code);
+        const result = ENGINE.runSync(context, 'after_generation');
+        allResults.push(result);
+        if (!asJson)
+            printReport(result, true);
+    }
+    if (asJson) {
+        console.log(JSON.stringify({
+            status: allResults.some(r => r.status === 'blocked') ? 'blocked' : 'ok',
+            filesAnalyzed: allResults.length,
+            results: allResults,
+            summary: {
+                critical: allResults.reduce((s, r) => s + r.summary.critical, 0),
+                high: allResults.reduce((s, r) => s + r.summary.high, 0),
+                medium: allResults.reduce((s, r) => s + r.summary.medium, 0),
+                low: allResults.reduce((s, r) => s + r.summary.low, 0),
+            },
+        }, null, 2));
     }
 }
 const args = process.argv.slice(2);
 const command = args[0];
+const asJson = args.includes('--json');
 switch (command) {
     case 'run': {
         const target = args[1];
         if (!target) {
-            console.log('Usage: architect run <file|directory>');
+            console.log('Usage: architect run <file|directory> [--json]');
             process.exit(1);
         }
         try {
             if ((0, fs_1.statSync)(target).isDirectory()) {
-                runOnDir(target);
+                runOnDir(target, asJson);
             }
             else {
-                runOnFile(target);
+                runOnFile(target, asJson);
             }
         }
         catch {
@@ -179,7 +237,7 @@ switch (command) {
         break;
     }
     case 'staged':
-        runOnStaged();
+        runOnStaged(asJson);
         break;
     case 'rules':
         console.log('\n  📋 Regras registradas no Architect Engine:\n');

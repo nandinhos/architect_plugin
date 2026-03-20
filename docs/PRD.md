@@ -276,9 +276,10 @@ Cada regra é uma função pura testável. O engine tem 18 testes unitários cob
 - [x] Instalador one-line
 
 ### v2.1
+- [x] AST-based CQ-001 (TypeScript Compiler API — parser real, não regex)
+- [x] Output JSON para CI/CD (`architect run --json`, `architect staged --json`)
 - [ ] `architect init --template=react` (boilerplates por stack)
 - [ ] `architect config` (CLI interativa para configurar regras)
-- [ ] Output JSON para integração CI
 
 ### v2.2
 - [ ] AST-based design validator (Babel parser)
@@ -296,9 +297,9 @@ Cada regra é uma função pura testável. O engine tem 18 testes unitários cob
 
 | Métrica | Valor |
 |---------|-------|
-| Testes | 18 passing |
-| Cobertura | Em monitoramento |
+| Testes | 29 passing |
 | Regras MVP | 6/6 |
+| AST Analyzer | Implementado (TypeScript Compiler API) |
 | Vulnerabilidades npm | 0 |
 | Erros de tipo | 0 |
 | Erros de lint | 0 |
