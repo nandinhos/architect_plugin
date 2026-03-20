@@ -1,16 +1,17 @@
-export {
-  ArchitectDashboard,
-  type DesignTokens,
-  type ArchitectStatus,
-} from './components/ArchitectDashboard';
+export * from './types';
 
-import tokens from '../.architect/design/tokens.json';
+export { RuleRegistry } from './engine/RuleRegistry';
+export { DecisionEngine } from './engine/DecisionEngine';
+export { ArchitectEngine } from './engine/RuleEngine';
 
-export const DESIGN_TOKENS = tokens;
+export { securityRules } from './rules/SecurityRules';
+export { testRules } from './rules/TestRules';
+export { codeQualityRules } from './rules/CodeQualityRules';
+export { loggingRules } from './rules/LoggingRules';
+export { designRules } from './rules/DesignRules';
 
-export const PROTOCOL_VERSION = tokens.version;
-export const PROJECT_NAME = tokens.project;
-export const DNA = tokens.dna;
-export const PALETTE = tokens.palette_extended;
-export const PRINCIPLES = tokens.principles;
-export const ANTI_PATTERNS = tokens.anti_patterns;
+export { createSQLInjectionRule, createEvalRule } from './rules/SecurityRules';
+export { createTestRequiredRule } from './rules/TestRules';
+export { createAntiPatternRule } from './rules/CodeQualityRules';
+export { createNoConsoleRule } from './rules/LoggingRules';
+export { createDesignValidatorRule } from './rules/DesignRules';

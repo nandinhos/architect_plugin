@@ -1,0 +1,27 @@
+const tokens = {
+  project: 'architect-ai',
+  version: '2.0.0',
+  dna: {
+    primary: '#6366F1',
+    primary_name: 'Architect Indigo',
+    background: '#F9FAFB',
+    surface: '#FFFFFF',
+    text: '#111827',
+    muted: '#6B7280',
+    border: '#E5E7EB',
+    radius: '0.75rem',
+    shadow: '0 4px 20px rgba(0,0,0,0.05)',
+  },
+  typography: {
+    font_heading: 'Inter, sans-serif',
+    font_body: 'Inter, sans-serif',
+  },
+  palette_extended: {
+    indigo: { 50: '#EEF2FF', 500: '#6366F1', 900: '#312E81' },
+    slate: { 50: '#F8FAFC', 500: '#64748B', 900: '#0F172A' },
+  },
+  principles: ['Visual DNA First', 'Hierarchy & Focus', 'Consistent Spacing', 'Interactive Feedback'],
+  anti_patterns: ['Generic Gradients', 'Placeholder-only Forms', 'Emoji-only Icons', 'Hardcoded Colors'],
+};
+
+export default tokens;

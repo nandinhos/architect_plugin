@@ -19,6 +19,7 @@ describe('ArchitectDashboard Logic (TDD — Phase 4)', () => {
   });
 
   it('deve falhar se os tokens de design estiverem ausentes', () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect(() => new ArchitectDashboard(null as any)).toThrow(
       'Design tokens are mandatory for The Architect.'
     );

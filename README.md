@@ -1,75 +1,150 @@
-# 🏗️ The Architect — Elite Behavior Engine (v1.0.0)
+# 🏗️ Architect Engine — v2.0
 
-[![Protocol: Architect Sinistro](https://img.shields.io/badge/Protocol-Architect%20Sinistro-6366F1?style=for-the-badge)](./ARCHITECT.md)
-[![Build Status](https://img.shields.io/badge/Build-Passing-green?style=for-the-badge)](./.github/workflows/ci.yml)
-[![Tests Coverage](https://img.shields.io/badge/Tests-100%25-brightgreen?style=for-the-badge)](./src/index.test.ts)
-[![Security: Audited](https://img.shields.io/badge/Security-Audited-blue?style=for-the-badge)](./.architect/security/rules.md)
+> **"Código gerado por IA sem validação é Doidera, e Doidera vira dívida."**
 
-> **"Eu sou O Arquiteto. Eu não gero código; eu construo sistemas."**
-
-O `architect-plugin` é um **Engine de Comportamento Sênior** que transforma qualquer agente de IA (Gemini CLI, Claude Code, Cursor, Copilot) em um engenheiro de elite. Ele injeta rigor técnico, segurança auditável e design-as-code diretamente no seu repositório.
+**Uma linha. Qualquer projeto. Engenheiro Sênior automático.**
 
 ---
 
-## ⚡ Superpoderes Ativos
+## ⚡ Instalação (30 segundos)
 
-Este ecossistema força a IA a operar sob protocolos de 30 anos de experiência:
-
-- **🚀 Protocolo TDD Mandatário:** Nenhuma funcionalidade é considerada pronta sem testes unitários (`Jest`).
-- **🛡️ Security First:** Checklist acionável contra SQLi, XSS e PII, com auditoria `npm audit` integrada.
-- **💎 Design as Code (Indigo DNA):** Identidade visual inquebrável inspirada no **Architect Indigo** (`#6366F1`), eliminando o "visual genérico de IA".
-- **🎼 Orquestração Unificada:** Portabilidade total entre Claude, Cursor e Gemini via arquivos de vendor minimalistas.
-
----
-
-## 🏗️ Arquitetura do Protocolo
-
-O cérebro do sistema reside no diretório `.architect/`, uma estrutura portátil e versionável:
-
-```text
-.architect/
-├── design/         # DNA Visual: tokens.json, principles.md, ANTI_PATTERNS.md
-├── security/       # Camada de Defesa: rules.md (SAST/Taint Logic)
-├── skills/         # Master Skill: senior-engineer.md (O comportamento sênior)
-└── manifests/      # Glue Code: Integrações vendor-specific
-```
-
----
-
-## 🛠️ Guia de Início Rápido
-
-### 1. Verificação de Prontidão (Obrigatório)
-Antes de qualquer tarefa, valide se o seu ambiente atende aos requisitos do Arquiteto:
 ```bash
-node scripts/check-readiness.js
+curl -fsSL https://raw.githubusercontent.com/nandinhos/architect_plugin/main/install.sh | sh
 ```
 
-### 2. Desenvolvimento Sênior (Workflow)
-O plugin segue um ciclo de vida rigoroso:
-1.  **Planning:** Defina o plano em `docs/plans/architect/`.
-2.  **DNA:** Sincronize com os tokens em `.architect/design/tokens.json`.
-3.  **TDD:** Escreva o teste, veja falhar, implemente, refatore.
-4.  **Security Audit:** Execute `npm audit --audit-level=moderate`.
-5.  **Review:** Validação final contra Clean Code e SOLID.
+Pronto. Funciona em qualquer projeto Node.js.
 
 ---
 
-## 🧪 Validação Técnica (Resultados)
+## 🚀 Uso (3 comandos)
 
-O sistema foi submetido ao **Workflow de Verificação Total** com os seguintes resultados:
+```bash
+# 1. Inicializar no projeto
+architect init
 
-| Métrica | Resultado | Status |
-| :--- | :--- | :--- |
-| **Integridade de Tipos** | 0 Erros de TS | ✅ PASS |
-| **Testes Unitários** | 100% Sucesso | ✅ PASS |
-| **Vulnerabilidades** | 0 Detectadas | ✅ PASS |
-| **Design DNA** | Indigo Sync | ✅ PASS |
+# 2. Analisar qualquer arquivo
+architect run src/utils.ts
+
+# 3. Analisar tudo que vai ser commitado
+architect staged
+```
+
+---
+
+## 🔒 O que ele bloqueia
+
+```
+architect run src/db.ts
+```
+
+```
+🔴 [SEC-001] SQL Injection detectado
+   [src/db.ts:12]
+
+⛔ BLOQUEADO: Corrija issues critical antes de continuar.
+```
+
+O engine avalia **6 regras** automaticamente:
+
+| Regra | Severidade | O que detecta |
+|-------|-----------|---------------|
+| SEC-001 | 🔴 critical | SQL Injection (concatenação de strings) |
+| SEC-002 | 🔴 critical | eval, exec, new Function |
+| TEST-001 | 🟠 high | Arquivo sem teste |
+| CQ-001 | 🟠 high | Funções >50 linhas, `any`, nomes genéricos |
+| LOG-001 | 🟡 medium | console.log em produção |
+| DES-001 | ⚪ low | Cores hardcoded, gradientes genéricos |
 
 ---
 
-## 👨‍💻 Contribuição
-Desenvolvido por **Nando Dev** — Operando sob o **Protocolo do Arquiteto Sinistro**.
-Este repositório é uma zona de **Engenharia de Elite**. Padrões medíocres não são aceitos.
+## 🏗️ Arquitetura
+
+```
+RuleEngine          → Executa regras por trigger
+  └── RuleRegistry  → Registro e filtro
+       └── DecisionEngine → BLOCK / WARN / OK
+```
 
 ---
-"Sua excelência técnica é o seu único argumento."
+
+## 📦 API
+
+```ts
+import { ArchitectEngine, createSQLInjectionRule } from 'architect-ai';
+
+const engine = new ArchitectEngine({ failOn: 'high' });
+engine.registerRule(createSQLInjectionRule());
+
+const result = engine.runSync({
+  code: 'db.query("SELECT * FROM users WHERE id = " + id)',
+  filePath: 'src/db.ts',
+  fileName: 'db.ts',
+  language: 'typescript',
+  metadata: {},
+}, 'after_generation');
+
+// result.status: 'blocked' | 'warned' | 'ok'
+```
+
+---
+
+## 🧩 Extensível
+
+Crie regras customizadas em 10 linhas:
+
+```ts
+import { createRule } from 'architect-ai';
+
+export const noTodo = createRule({
+  id: 'MY-001',
+  name: 'No TODO',
+  trigger: 'after_generation',
+  severity: 'high',
+  validate(ctx) {
+    const has = ctx.code.includes('TODO');
+    return {
+      ruleId: 'MY-001', ruleName: 'No TODO',
+      valid: !has,
+      issues: has ? [{ code: 'MY-001', message: 'TODO encontrado', severity: 'high', file: ctx.filePath }] : [],
+    };
+  },
+});
+```
+
+---
+
+## 📁 Estrutura
+
+```
+.architect/           ← Gerado pelo init
+├── tokens.json       ← DNA do projeto (cores, tipografia)
+└── config.json       ← Quais regras ativas
+
+bin/architect.js      ← CLI (instalado globalmente)
+src/
+├── engine/           ← RuleEngine, RuleRegistry, DecisionEngine
+├── rules/            ← 6 regras MVP
+├── cli/              ← Entry point CLI
+└── types.ts          ← BehaviorRule, Issue, etc.
+```
+
+---
+
+## 🧪 Qualidade
+
+```
+npm test         → 18/18 passing ✅
+npm run lint     → 0 errors ✅
+npm run typecheck → 0 errors ✅
+npm audit        → 0 vulnerabilities ✅
+```
+
+---
+
+## Desenvolvido por
+
+**Nando Dev** — sob o **Protocolo do Arquiteto Sinistro**.
+
+```
+"Eu sou O Arquiteto. Eu não gero código; eu construo sistemas."
+```

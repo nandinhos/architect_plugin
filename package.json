@@ -1,21 +1,16 @@
 {
-  "name": "architect_plugin",
-  "version": "1.0.0",
-  "description": "Engine de Comportamento Sênior para Agentes de IA — força rigor de design, segurança e TDD",
+  "name": "architect-ai",
+  "version": "2.0.0",
+  "description": "Runtime de Regras Comportamentais — valida e bloqueia código inseguro, sem teste e fora de padrão gerado por IA",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
     "dist",
-    ".architect",
-    "ARCHITECT.md"
+    "bin"
   ],
-  "directories": {
-    "doc": "docs"
-  },
   "scripts": {
     "build": "tsc",
     "prepublishOnly": "npm run build",
-    "prepare": "husky",
     "test": "jest",
     "test:coverage": "jest --coverage",
     "typecheck": "tsc --noEmit",
@@ -23,18 +18,16 @@
     "lint:fix": "eslint src/ --ext .ts --fix",
     "format": "prettier --write \"src/**/*.ts\""
   },
-  "lint-staged": {
-    "src/**/*.ts": [
-      "eslint --fix",
-      "prettier --write"
-    ]
+  "bin": {
+    "architect": "bin/architect.js"
   },
   "keywords": [
-    "architect",
     "ai-agent",
-    "senior-engineer",
-    "design-system",
-    "tdd"
+    "security",
+    "lint",
+    "tdd",
+    "code-quality",
+    "behavior-engine"
   ],
   "author": "Nando Dev <nandinhos@gmail.com>",
   "license": "ISC",
