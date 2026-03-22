@@ -1,4 +1,4 @@
-# 🏗️ Architect Engine — v2.1
+# Architect Engine — v2.2
 
 > **"Código gerado por IA sem validação é технический долг."**
 
@@ -6,7 +6,7 @@
 
 ---
 
-## ⚡ Instalação (30 segundos)
+## Instalacao (30 segundos)
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/nandinhos/architect_plugin/main/install.sh | sh
@@ -16,25 +16,36 @@ Pronto. Funciona em qualquer projeto Node.js.
 
 ---
 
-## 🚀 Uso (3 comandos)
+## Uso (Comandos)
 
 ```bash
 # 1. Inicializar no projeto
 architect init
 
-# 2. Analisar qualquer arquivo
+# 2. Inicializar com template
+architect init --template=react
+
+# 3. Analisar qualquer arquivo
 architect run src/utils.ts
 
-# 3. Analisar tudo que vai ser commitado
+# 4. Analisar tudo que vai ser commitado
 architect staged
 
-# 4. Output JSON para CI/CD
+# 5. Output JSON para CI/CD
 architect run src/ --json
+
+# 6. Ver regras registradas
+architect rules
+
+# 7. Ver/editar configuracao
+architect config
+architect config enable SEC-001
+architect config disable LOG-001
 ```
 
 ---
 
-## 🔒 O que ele bloqueia
+## O que ele bloqueia
 
 ```
 architect run src/db.ts
@@ -47,20 +58,22 @@ architect run src/db.ts
 ⛔ BLOQUEADO: Corrija issues critical antes de continuar.
 ```
 
-O engine avalia **6 regras** automaticamente:
+O engine avalia **8 regras** automaticamente:
 
-| Regra | Severidade | O que detecta |
-|-------|-----------|---------------|
-| SEC-001 | 🔴 critical | SQL Injection (concatenação de strings) |
-| SEC-002 | 🔴 critical | eval, exec, new Function |
-| TEST-001 | 🟠 high | Arquivo sem teste |
-| CQ-001 | 🟠 high | **Funções >50 linhas, `any`, nomes genéricos** (via TypeScript AST) |
-| LOG-001 | 🟡 medium | console.log em produção |
-| DES-001 | ⚪ low | Cores hardcoded, gradientes genéricos |
+| Regra    | Severidade | O que detecta                                                   |
+| -------- | ---------- | --------------------------------------------------------------- |
+| SEC-001  | critical   | SQL Injection (concatenacao de strings)                         |
+| SEC-002  | critical   | eval, exec, new Function                                        |
+| SEC-003  | critical   | **XSS** (innerHTML, document.write)                             |
+| SEC-004  | high       | **PII** (passwords, emails, CPFs em logs)                       |
+| TEST-001 | high       | Arquivo sem teste                                               |
+| CQ-001   | high       | Funcoes >50 linhas, `any`, nomes genéricos (via TypeScript AST) |
+| LOG-001  | medium     | console.log em producao                                         |
+| DES-001  | low        | Cores hardcoded, gradientes genericos                           |
 
 ---
 
-## 🏗️ Arquitetura
+## Arquitetura
 
 ```
 RuleEngine          → Executa regras por trigger
@@ -68,12 +81,12 @@ RuleEngine          → Executa regras por trigger
        └── DecisionEngine → BLOCK / WARN / OK
 ```
 
-**CQ-001** usa **TypeScript Compiler API (AST)** — não regex.
-Detecta `any`, funções longas, nomes genéricos e arquivos >300 linhas com precisão de parser real.
+**CQ-001** usa **TypeScript Compiler API (AST)** — nao regex.
+Detecta `any`, funcoes longas, nomes genericos e arquivos >300 linhas com precisao de parser real.
 
 ---
 
-## 📦 Output JSON (CI/CD)
+## Output JSON (CI/CD)
 
 ```bash
 architect run src/ --json
@@ -94,13 +107,25 @@ architect run src/ --json
 
 ---
 
-## 🧪 Qualidade
+## Qualidade
 
 ```
-npm test         → 29/29 passing ✅
-npm run lint     → 0 errors ✅
-npm run typecheck → 0 errors ✅
-npm audit        → 0 vulnerabilities ✅
+npm test         → 58/58 passing
+npm run lint     → 0 errors
+npm run typecheck → 0 errors
+npm audit        → 0 vulnerabilities
+```
+
+---
+
+## Templates para Init
+
+```bash
+architect init               # Default (Indigo)
+architect init --template=react   # React (Cyan)
+architect init --template=vue    # Vue (Green)
+architect init --template=next   # Next.js (Black)
+architect init --template=astro   # Astro (Orange)
 ```
 
 ---

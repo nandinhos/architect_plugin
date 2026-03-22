@@ -198,3 +198,78 @@ describe('CLI - architect run em diretorio', () => {
     expect(result.exitCode).toBe(0);
   });
 });
+
+describe('CLI - architect init --template', () => {
+  const templateTestDir = join(__dirname, '../fixtures/template-test');
+
+  beforeEach(() => {
+    try {
+      rmSync(templateTestDir, { recursive: true, force: true });
+      mkdirSync(templateTestDir, { recursive: true });
+    } catch {
+      /* ignore */
+    }
+  });
+
+  afterEach(() => {
+    try {
+      rmSync(templateTestDir, { recursive: true, force: true });
+    } catch {
+      /* ignore */
+    }
+  });
+
+  it('deve criar projeto com template react', () => {
+    const originalCwd = process.cwd();
+    process.chdir(templateTestDir);
+
+    const result = runCLI(['init', '--template', 'react']);
+    expect(result.stdout).toContain('React');
+    expect(result.stdout).toContain('Template:');
+
+    process.chdir(originalCwd);
+  });
+
+  it('deve criar projeto com template vue', () => {
+    const originalCwd = process.cwd();
+    process.chdir(templateTestDir);
+
+    const result = runCLI(['init', '--template', 'vue']);
+    expect(result.stdout).toContain('Vue');
+
+    process.chdir(originalCwd);
+  });
+});
+
+describe('CLI - architect config', () => {
+  const configTestDir = join(__dirname, '../fixtures/config-test');
+
+  beforeEach(() => {
+    try {
+      rmSync(configTestDir, { recursive: true, force: true });
+      mkdirSync(configTestDir, { recursive: true });
+    } catch {
+      /* ignore */
+    }
+  });
+
+  afterEach(() => {
+    try {
+      rmSync(configTestDir, { recursive: true, force: true });
+    } catch {
+      /* ignore */
+    }
+  });
+
+  it('deve mostrar mensagem quando .architect nao existe', () => {
+    const originalCwd = process.cwd();
+    process.chdir(configTestDir);
+
+    const result = runCLI(['config']);
+
+    expect(result.stdout).toContain('Execute "architect init"');
+    expect(result.exitCode).toBe(0);
+
+    process.chdir(originalCwd);
+  });
+});

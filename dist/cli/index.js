@@ -383,7 +383,6 @@ switch (command) {
 }
 function runConfig(asJson) {
     const configPath = (0, path_1.join)(process.cwd(), '.architect', 'config.json');
-    const archDir = (0, path_1.join)(process.cwd(), '.architect');
     let config = {};
     if ((0, fs_1.existsSync)(configPath)) {
         try {
