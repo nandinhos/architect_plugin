@@ -19,13 +19,23 @@ const DesignRules_1 = require("../rules/DesignRules");
 const tokens_1 = __importDefault(require("../engine/tokens"));
 const ENGINE = new RuleEngine_1.ArchitectEngine({ autoFix: false, failOn: 'high' });
 exports.ENGINE = ENGINE;
-ENGINE.registerRules([...SecurityRules_1.securityRules, ...TestRules_1.testRules, ...CodeQualityRules_1.codeQualityRules, ...LoggingRules_1.loggingRules, ...(0, DesignRules_1.designRules)({ primary: tokens_1.default.dna.primary })]);
+ENGINE.registerRules([
+    ...SecurityRules_1.securityRules,
+    ...TestRules_1.testRules,
+    ...CodeQualityRules_1.codeQualityRules,
+    ...LoggingRules_1.loggingRules,
+    ...(0, DesignRules_1.designRules)({ primary: tokens_1.default.dna.primary }),
+]);
 function detectLanguage(filePath) {
     const ext = (0, path_1.extname)(filePath).toLowerCase();
     const map = {
-        '.ts': 'typescript', '.tsx': 'typescript',
-        '.js': 'javascript', '.jsx': 'javascript',
-        '.css': 'css', '.html': 'html', '.htm': 'html',
+        '.ts': 'typescript',
+        '.tsx': 'typescript',
+        '.js': 'javascript',
+        '.jsx': 'javascript',
+        '.css': 'css',
+        '.html': 'html',
+        '.htm': 'html',
         '.json': 'json',
     };
     return map[ext] ?? 'unknown';
@@ -200,7 +210,7 @@ function runOnDir(dirPath, asJson = false) {
     }
     if (asJson) {
         console.log(JSON.stringify({
-            status: allResults.some(r => r.status === 'blocked') ? 'blocked' : 'ok',
+            status: allResults.some((r) => r.status === 'blocked') ? 'blocked' : 'ok',
             filesAnalyzed: allResults.length,
             results: allResults,
             summary: {
@@ -249,20 +259,65 @@ switch (command) {
     case 'version':
         console.log(`Architect Engine v${tokens_1.default.version}`);
         break;
+    case 'config': {
+        const configArgs = args.slice(1);
+        if (configArgs.length === 0) {
+            runConfig(asJson);
+        }
+        else if (configArgs[0] === 'enable' && configArgs[1]) {
+            enableRule(configArgs[1]);
+        }
+        else if (configArgs[0] === 'disable' && configArgs[1]) {
+            disableRule(configArgs[1]);
+        }
+        else {
+            console.log('Usage:');
+            console.log('  architect config                    Mostrar configuracao');
+            console.log('  architect config --json           Mostrar em JSON');
+            console.log('  architect config enable <rule-id> Habilitar regra');
+            console.log('  architect config disable <rule-id> Desabilitar regra');
+        }
+        break;
+    }
     case 'init': {
         const cwd = process.cwd();
         const archDir = (0, path_1.join)(cwd, '.architect');
+        const initArgs = args.slice(1);
+        let template = 'default';
+        for (let i = 0; i < initArgs.length; i++) {
+            if (initArgs[i] === '--template' && initArgs[i + 1]) {
+                template = initArgs[i + 1];
+            }
+        }
+        const templates = {
+            default: { primary: '#6366F1', background: '#F9FAFB', name: 'Default Indigo' },
+            react: { primary: '#61DAFB', background: '#282C34', name: 'React' },
+            vue: { primary: '#42B883', background: '#FFFFFF', name: 'Vue Green' },
+            next: { primary: '#000000', background: '#FFFFFF', name: 'Next.js' },
+            astro: { primary: '#FF5A03', background: '#FFFFFF', name: 'Astro Orange' },
+        };
         if ((0, fs_1.existsSync)(archDir)) {
             console.log('  ⚠️  .architect/ já existe neste projeto.');
             console.log('  Para reconfigurar, delete .architect/ e rode novamente.');
             break;
         }
+        const templateConfig = templates[template] || templates.default;
         (0, fs_1.mkdirSync)(archDir, { recursive: true });
         (0, fs_1.mkdirSync)((0, path_1.join)(archDir, 'rules'), { recursive: true });
         (0, fs_1.writeFileSync)((0, path_1.join)(archDir, 'tokens.json'), JSON.stringify({
             project: cwd.split('/').pop() || 'my-project',
             version: tokens_1.default.version,
-            dna: tokens_1.default.dna,
+            dna: {
+                primary: templateConfig.primary,
+                primary_name: templateConfig.name,
+                background: templateConfig.background,
+                surface: '#FFFFFF',
+                text: '#111827',
+                muted: '#6B7280',
+                border: '#E5E7EB',
+                radius: '0.75rem',
+                shadow: '0 4px 20px rgba(0,0,0,0.05)',
+            },
             palette_extended: tokens_1.default.palette_extended,
             principles: tokens_1.default.principles,
             anti_patterns: tokens_1.default.anti_patterns,
@@ -273,6 +328,8 @@ switch (command) {
             rules: {
                 'SEC-001': { enabled: true },
                 'SEC-002': { enabled: true },
+                'SEC-003': { enabled: true },
+                'SEC-004': { enabled: true },
                 'TEST-001': { enabled: true },
                 'CQ-001': { enabled: true },
                 'LOG-001': { enabled: true },
@@ -281,6 +338,8 @@ switch (command) {
         }, null, 2));
         console.log(`
   ✅ Architect Engine inicializado!
+
+  Template: ${templateConfig.name}
 
   📁 .architect/
      ├── tokens.json   ← DNA do seu projeto
@@ -291,7 +350,12 @@ switch (command) {
   2. Adicione hooks ao package.json:
      "prepare": "husky install"
 
+  Templates disponíveis:
+    default, react, vue, next, astro
   Uso:
+    architect init --template=react
+
+  Comandos:
     architect run <file>   Analisar arquivo
     architect rules       Listar regras
     architect version     Versão
@@ -308,6 +372,7 @@ switch (command) {
     architect staged            Analisar arquivos em staging (git)
     architect rules             Listar regras registradas
     architect version           Versão do engine
+    architect config            Mostrar/editar configuração
 
   Examples:
     architect init
@@ -315,5 +380,90 @@ switch (command) {
     architect run src/utils.ts
     architect staged
 `);
+}
+function runConfig(asJson) {
+    const configPath = (0, path_1.join)(process.cwd(), '.architect', 'config.json');
+    const archDir = (0, path_1.join)(process.cwd(), '.architect');
+    let config = {};
+    if ((0, fs_1.existsSync)(configPath)) {
+        try {
+            config = JSON.parse((0, fs_1.readFileSync)(configPath, 'utf8'));
+        }
+        catch {
+            config = {};
+        }
+    }
+    if (asJson) {
+        console.log(JSON.stringify(config, null, 2));
+        return;
+    }
+    console.log('\n  Configuracao do Architect Engine\n');
+    console.log('  Diretorio: .architect/');
+    console.log('');
+    if (Object.keys(config).length === 0) {
+        console.log('  Nenhuma configuracao encontrada.');
+        console.log('  Execute "architect init" para criar uma configuracao padrao.\n');
+        return;
+    }
+    console.log('  Configuracoes atuais:');
+    console.log(`    autoFix: ${config.autoFix ?? false}`);
+    console.log(`    failOn: ${config.failOn ?? 'high'}`);
+    console.log('');
+    if (config.rules && typeof config.rules === 'object') {
+        console.log('  Regras:');
+        const rules = config.rules;
+        for (const [ruleId, ruleConfig] of Object.entries(rules)) {
+            console.log(`    ${ruleId}: ${ruleConfig.enabled ? 'enabled' : 'disabled'}`);
+        }
+    }
+    console.log('');
+}
+function enableRule(ruleId) {
+    const configPath = (0, path_1.join)(process.cwd(), '.architect', 'config.json');
+    const archDir = (0, path_1.join)(process.cwd(), '.architect');
+    if (!(0, fs_1.existsSync)(archDir)) {
+        console.log('  Execute "architect init" primeiro.\n');
+        process.exit(1);
+    }
+    let config = {};
+    if ((0, fs_1.existsSync)(configPath)) {
+        try {
+            config = JSON.parse((0, fs_1.readFileSync)(configPath, 'utf8'));
+        }
+        catch {
+            config = {};
+        }
+    }
+    if (!config.rules) {
+        config.rules = {};
+    }
+    const rules = config.rules;
+    rules[ruleId] = { enabled: true };
+    (0, fs_1.writeFileSync)(configPath, JSON.stringify(config, null, 2));
+    console.log(`  Regra ${ruleId} habilitada.\n`);
+}
+function disableRule(ruleId) {
+    const configPath = (0, path_1.join)(process.cwd(), '.architect', 'config.json');
+    const archDir = (0, path_1.join)(process.cwd(), '.architect');
+    if (!(0, fs_1.existsSync)(archDir)) {
+        console.log('  Execute "architect init" primeiro.\n');
+        process.exit(1);
+    }
+    let config = {};
+    if ((0, fs_1.existsSync)(configPath)) {
+        try {
+            config = JSON.parse((0, fs_1.readFileSync)(configPath, 'utf8'));
+        }
+        catch {
+            config = {};
+        }
+    }
+    if (!config.rules) {
+        config.rules = {};
+    }
+    const rules = config.rules;
+    rules[ruleId] = { enabled: false };
+    (0, fs_1.writeFileSync)(configPath, JSON.stringify(config, null, 2));
+    console.log(`  Regra ${ruleId} desabilitada.\n`);
 }
 //# sourceMappingURL=index.js.map

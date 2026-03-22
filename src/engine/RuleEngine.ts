@@ -49,7 +49,7 @@ export class ArchitectEngine {
       };
     }
 
-    const results: RuleResult[] = rules.map(rule => {
+    const results: RuleResult[] = rules.map((rule) => {
       try {
         const result = rule.validate(context);
 
@@ -94,7 +94,7 @@ export class ArchitectEngine {
       };
     }
 
-    const results: RuleResult[] = rules.map(rule => {
+    const results: RuleResult[] = rules.map((rule) => {
       try {
         const result = rule.validate(context);
 
@@ -132,5 +132,19 @@ export class ArchitectEngine {
 
   getRuleCount(): number {
     return this.registry.count();
+  }
+
+  enableRule(ruleId: string): boolean {
+    const rule = this.registry.getById(ruleId);
+    if (!rule) return false;
+    return true;
+  }
+
+  disableRule(ruleId: string): boolean {
+    return this.registry.unregister(ruleId);
+  }
+
+  isRuleEnabled(ruleId: string): boolean {
+    return this.registry.getById(ruleId) !== undefined;
   }
 }

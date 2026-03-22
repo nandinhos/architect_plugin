@@ -1,9 +1,0 @@
-# Cursor IDE Manifest — The Architect Protocol
-
-## 🔗 Configuração
-- **Core Rules:** `.cursorrules`
-- **Primary Entry:** `ARCHITECT.md`
-- **Context:** Pasta `.architect/`
-
-## ⚙️ Regras de Ativação
-Respeite rigorosamente os tokens em `.architect/design/tokens.json`.

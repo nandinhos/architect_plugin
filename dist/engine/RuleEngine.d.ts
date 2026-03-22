@@ -11,5 +11,8 @@ export declare class ArchitectEngine {
     runSync(context: RuleContext, trigger: TriggerType): EvaluationResult;
     getRules(): ReturnType<RuleRegistry['getAll']>;
     getRuleCount(): number;
+    enableRule(ruleId: string): boolean;
+    disableRule(ruleId: string): boolean;
+    isRuleEnabled(ruleId: string): boolean;
 }
 //# sourceMappingURL=RuleEngine.d.ts.map

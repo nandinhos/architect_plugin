@@ -1,9 +1,0 @@
-# Claude Code Manifest — The Architect Protocol
-
-## 🔗 Configuração
-- **Primary Entry:** `ARCHITECT.md`
-- **Skill Path:** `.architect/skills/senior-engineer.md`
-- **Design Path:** `.architect/design/`
-
-## ⚙️ Diretrizes
-Siga o rigor TDD e as regras de design em `.architect/design/principles.md`.

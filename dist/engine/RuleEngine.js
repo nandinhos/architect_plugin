@@ -34,7 +34,7 @@ class ArchitectEngine {
                 triggeredBy: trigger,
             };
         }
-        const results = rules.map(rule => {
+        const results = rules.map((rule) => {
             try {
                 const result = rule.validate(context);
                 if (this.config.autoFix && rule.enforce && !result.valid) {
@@ -74,7 +74,7 @@ class ArchitectEngine {
                 triggeredBy: trigger,
             };
         }
-        const results = rules.map(rule => {
+        const results = rules.map((rule) => {
             try {
                 const result = rule.validate(context);
                 if (this.config.autoFix && rule.enforce && !result.valid) {
@@ -108,6 +108,18 @@ class ArchitectEngine {
     }
     getRuleCount() {
         return this.registry.count();
+    }
+    enableRule(ruleId) {
+        const rule = this.registry.getById(ruleId);
+        if (!rule)
+            return false;
+        return true;
+    }
+    disableRule(ruleId) {
+        return this.registry.unregister(ruleId);
+    }
+    isRuleEnabled(ruleId) {
+        return this.registry.getById(ruleId) !== undefined;
     }
 }
 exports.ArchitectEngine = ArchitectEngine;
