@@ -65,7 +65,11 @@ mkdir -p "${INSTALL_DIR}/bin"
 mkdir -p "${INSTALL_DIR}/lib"
 
 cp -r "${TEMP_DIR}/architect_plugin/dist" "${INSTALL_DIR}/lib/dist"
-cp "${TEMP_DIR}/architect_plugin/bin/architect.js" "${ARCH_BIN}"
+cp -r "${TEMP_DIR}/architect_plugin/node_modules" "${INSTALL_DIR}/"
+
+# Create wrapper script with correct path
+echo '#!/usr/bin/env node' > "${ARCH_BIN}"
+echo "require(__dirname + '/../lib/dist/cli/index');" >> "${ARCH_BIN}"
 chmod +x "${ARCH_BIN}"
 
 # Cleanup
