@@ -49,16 +49,23 @@ git clone --depth 1 "${ARCH_REPO}" "${TEMP_DIR}/architect_plugin" 2>/dev/null ||
 echo "  ⚙️  Build..."
 
 cd "${TEMP_DIR}/architect_plugin"
-npm install --silent 2>/dev/null
-npm run build --silent 2>/dev/null
+npm install || { echo "  ❌ Falha ao instalar dependências."; rm -rf "${TEMP_DIR}"; exit 1; }
+npm run build || { echo "  ❌ Falha ao compilar."; rm -rf "${TEMP_DIR}"; exit 1; }
+
+# Verify dist exists
+if [ ! -d "${TEMP_DIR}/architect_plugin/dist" ]; then
+  echo "  ❌ Pasta dist não encontrada após build."
+  rm -rf "${TEMP_DIR}"
+  exit 1
+fi
 
 # Install
 echo "  📁 Instalando em ${INSTALL_DIR}..."
 mkdir -p "${INSTALL_DIR}/bin"
 mkdir -p "${INSTALL_DIR}/lib"
 
-cp -r "${TEMP_DIR}/dist" "${INSTALL_DIR}/lib/dist"
-cp "${TEMP_DIR}/bin/architect.js" "${ARCH_BIN}"
+cp -r "${TEMP_DIR}/architect_plugin/dist" "${INSTALL_DIR}/lib/dist"
+cp "${TEMP_DIR}/architect_plugin/bin/architect.js" "${ARCH_BIN}"
 chmod +x "${ARCH_BIN}"
 
 # Cleanup
