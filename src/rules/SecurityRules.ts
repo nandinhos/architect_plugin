@@ -1,22 +1,90 @@
 import type { BehaviorRule, RuleContext, RuleResult, Issue } from '../types';
 
 const SQL_PATTERNS = [
-  { pattern: /SELECT\s+\*\s+FROM\s+\w+\s+WHERE\s+\w+\s*=\s*['"]?\s*\+/gi, code: 'SEC-001', msg: 'String interpolation em query SQL — risco de SQL Injection' },
-  { pattern: /INSERT\s+INTO\s+\w+\s*\([^)]*\)\s*VALUES\s*\([^)]*['"]?\s*\+/gi, code: 'SEC-001', msg: 'String interpolation em INSERT — risco de SQL Injection' },
-  { pattern: /UPDATE\s+\w+\s+SET\s+\w+\s*=\s*['"]?\s*\+/gi, code: 'SEC-001', msg: 'String interpolation em UPDATE — risco de SQL Injection' },
-  { pattern: /DELETE\s+FROM\s+\w+\s+WHERE\s+\w+\s*=\s*['"]?\s*\+/gi, code: 'SEC-001', msg: 'String interpolation em DELETE — risco de SQL Injection' },
-  { pattern: /"\s*\+\s*\w+\s*\+\s*"/g, code: 'SEC-001', msg: 'Concatenação de string em query SQL — risco de SQL Injection' },
+  {
+    pattern: /SELECT\s+\*\s+FROM\s+\w+\s+WHERE\s+\w+\s*=\s*['"]?\s*\+/gi,
+    code: 'SEC-001',
+    msg: 'String interpolation em query SQL — risco de SQL Injection',
+  },
+  {
+    pattern: /INSERT\s+INTO\s+\w+\s*\([^)]*\)\s*VALUES\s*\([^)]*['"]?\s*\+/gi,
+    code: 'SEC-001',
+    msg: 'String interpolation em INSERT — risco de SQL Injection',
+  },
+  {
+    pattern: /UPDATE\s+\w+\s+SET\s+\w+\s*=\s*['"]?\s*\+/gi,
+    code: 'SEC-001',
+    msg: 'String interpolation em UPDATE — risco de SQL Injection',
+  },
+  {
+    pattern: /DELETE\s+FROM\s+\w+\s+WHERE\s+\w+\s*=\s*['"]?\s*\+/gi,
+    code: 'SEC-001',
+    msg: 'String interpolation em DELETE — risco de SQL Injection',
+  },
+  {
+    pattern: /"\s*\+\s*\w+\s*\+\s*"/g,
+    code: 'SEC-001',
+    msg: 'Concatenação de string em query SQL — risco de SQL Injection',
+  },
 ];
 
 const DANGEROUS_FUNCTIONS = [
-  { pattern: /\beval\s*\(/g, code: 'SEC-002', msg: 'Uso de eval() detectado — risco de Code Injection' },
-  { pattern: /\bexec\s*\(/g, code: 'SEC-002', msg: 'Uso de exec() detectado — risco de Command Injection' },
-  { pattern: /\bexecSync\s*\(/g, code: 'SEC-002', msg: 'Uso de execSync() detectado — risco de Command Injection' },
-  { pattern: /\bnew\s+Function\s*\(/g, code: 'SEC-002', msg: 'new Function() é equivalente a eval() — risco de Code Injection' },
-  { pattern: /\bsetTimeout\s*\(\s*['"]/g, code: 'SEC-002', msg: 'setTimeout com string é equivalente a eval() — risco de Code Injection' },
+  {
+    pattern: /\beval\s*\(/g,
+    code: 'SEC-002',
+    msg: 'Uso de eval() detectado — risco de Code Injection',
+  },
+  {
+    pattern: /\bexec\s*\(/g,
+    code: 'SEC-002',
+    msg: 'Uso de exec() detectado — risco de Command Injection',
+  },
+  {
+    pattern: /\bexecSync\s*\(/g,
+    code: 'SEC-002',
+    msg: 'Uso de execSync() detectado — risco de Command Injection',
+  },
+  {
+    pattern: /\bnew\s+Function\s*\(/g,
+    code: 'SEC-002',
+    msg: 'new Function() é equivalente a eval() — risco de Code Injection',
+  },
+  {
+    pattern: /\bsetTimeout\s*\(\s*['"]/g,
+    code: 'SEC-002',
+    msg: 'setTimeout com string é equivalente a eval() — risco de Code Injection',
+  },
 ];
 
-function findIssues(code: string, patterns: { pattern: RegExp; code: string; msg: string }[], file: string): Issue[] {
+const XSS_PATTERNS = [
+  {
+    pattern: /\.innerHTML\s*=/gi,
+    code: 'SEC-003',
+    msg: 'innerHTML detectado — risco de XSS, use textContent ou sanitize',
+  },
+  { pattern: /\.outerHTML\s*=/gi, code: 'SEC-003', msg: 'outerHTML detectado — risco de XSS' },
+  {
+    pattern: /insertAdjacentHTML\s*\(/gi,
+    code: 'SEC-003',
+    msg: 'insertAdjacentHTML detectado — risco de XSS, use DOMPurify',
+  },
+  {
+    pattern: /document\.write\s*\(/gi,
+    code: 'SEC-003',
+    msg: 'document.write detectado — risco de XSS, remova',
+  },
+  {
+    pattern: /\.href\s*=\s*['"]?\s*javascript:/gi,
+    code: 'SEC-003',
+    msg: 'javascript: URL detected — risco de XSS',
+  },
+];
+
+function findIssues(
+  code: string,
+  patterns: { pattern: RegExp; code: string; msg: string }[],
+  file: string
+): Issue[] {
   const issues: Issue[] = [];
 
   for (const { pattern, code: ruleCode, msg } of patterns) {
@@ -115,4 +183,154 @@ export function createEvalRule(): BehaviorRule {
   };
 }
 
-export const securityRules = [createSQLInjectionRule(), createEvalRule()];
+export function createXSSRule(): BehaviorRule {
+  return {
+    id: 'SEC-003',
+    name: 'XSS Detection',
+    trigger: 'after_generation',
+    severity: 'critical',
+    description: 'Detecta padrões de Cross-Site Scripting (XSS) em código gerado',
+    validate(context: RuleContext): RuleResult {
+      const issues = findIssues(context.code, XSS_PATTERNS, context.filePath);
+
+      return {
+        ruleId: 'SEC-003',
+        ruleName: 'XSS Detection',
+        valid: issues.length === 0,
+        issues,
+      };
+    },
+    enforce(context, result) {
+      if (result.valid) return null;
+
+      let fixed = context.code;
+
+      fixed = fixed.replace(/\.innerHTML\s*=/gi, '.textContent =');
+      fixed = fixed.replace(/\.outerHTML\s*=/gi, '.textContent =');
+      fixed = fixed.replace(/insertAdjacentHTML\s*\(/gi, '/* SAFE: removed insertAdjacentHTML */(');
+      fixed = fixed.replace(/document\.write\s*\(/gi, '/* SAFE: removed document.write */(');
+
+      return {
+        fixed: true,
+        fixedCode: fixed,
+        suggestions: [
+          'Use element.textContent = userInput (seguro)',
+          'Use DOMPurify para sanitizar HTML: DOMPurify.sanitize(userHtml)',
+          'Use framework XSS protection (React, Vue, Angular)',
+          'Use library like DOMPurify ou xss',
+        ],
+      };
+    },
+  };
+}
+
+const PII_PATTERNS = [
+  {
+    pattern: /console\.(log|warn|error|info|debug).*password/i,
+    code: 'SEC-004',
+    msg: 'Logging de senha detectado — dados sensíveis expostos',
+    severity: 'critical' as const,
+  },
+  {
+    pattern: /console\.(log|warn|error|info|debug).*passwd/i,
+    code: 'SEC-004',
+    msg: 'Logging de senha detectado — dados sensíveis expostos',
+    severity: 'critical' as const,
+  },
+  {
+    pattern: /console\.(log|warn|error|info|debug).*secret/i,
+    code: 'SEC-004',
+    msg: 'Logging de secret/token detectado — dados sensíveis expostos',
+    severity: 'critical' as const,
+  },
+  {
+    pattern: /console\.(log|warn|error|info|debug).*(token|api[_-]?key)/i,
+    code: 'SEC-004',
+    msg: 'Logging de token/API key detectado — dados sensíveis expostos',
+    severity: 'critical' as const,
+  },
+  {
+    pattern: /console\.(log|warn|error|info|debug).*email/i,
+    code: 'SEC-004',
+    msg: 'Logging de email detectado — PII exposto',
+    severity: 'high' as const,
+  },
+  {
+    pattern: /console\.(log|warn|error|info|debug).*cpf/i,
+    code: 'SEC-004',
+    msg: 'Logging de CPF detectado — PII exposto',
+    severity: 'high' as const,
+  },
+  {
+    pattern: /console\.(log|warn|error|info|debug).*cnpj/i,
+    code: 'SEC-004',
+    msg: 'Logging de CNPJ detectado — PII exposto',
+    severity: 'high' as const,
+  },
+  {
+    pattern: /console\.(log|warn|error|info|debug).*(credit[_-]?card|card[_-]?number)/i,
+    code: 'SEC-004',
+    msg: 'Logging de cartão detectado — dados financeiros expostos',
+    severity: 'critical' as const,
+  },
+];
+
+export function createPIIDetectionRule(): BehaviorRule {
+  return {
+    id: 'SEC-004',
+    name: 'PII Exposure Detection',
+    trigger: 'after_generation',
+    severity: 'high',
+    description: 'Detecta exposição de Dados Pessoais Identificáveis (PII) em logs',
+    validate(context: RuleContext): RuleResult {
+      const { code, filePath } = context;
+      const issues: Issue[] = [];
+
+      const lines = code.split('\n');
+      for (let i = 0; i < lines.length; i++) {
+        for (const { pattern, code: ruleCode, msg, severity } of PII_PATTERNS) {
+          pattern.lastIndex = 0;
+          if (pattern.test(lines[i])) {
+            issues.push({
+              code: ruleCode,
+              message: msg,
+              line: i + 1,
+              severity,
+              file: filePath,
+            });
+          }
+        }
+      }
+
+      return {
+        ruleId: 'SEC-004',
+        ruleName: 'PII Exposure Detection',
+        valid: issues.length === 0,
+        issues,
+      };
+    },
+    enforce(context, result) {
+      if (result.valid) return null;
+
+      let fixed = context.code;
+      fixed = fixed.replace(/console\.(log|warn|error|info|debug)/gi, 'logger.info');
+
+      return {
+        fixed: true,
+        fixedCode: fixed,
+        suggestions: [
+          'Use logger estruturado com masking: logger.info("Login", { email: maskEmail(userEmail) })',
+          'Use constants para chaves sensíveis: const MASKED = "***"',
+          'Configure logger para não expor PII em produção',
+        ],
+      };
+    },
+  };
+}
+
+export const securityRules = [
+  createSQLInjectionRule(),
+  createEvalRule(),
+  createXSSRule(),
+  createPIIDetectionRule(),
+];

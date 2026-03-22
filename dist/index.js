@@ -14,7 +14,7 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createDesignValidatorRule = exports.createNoConsoleRule = exports.createAntiPatternRule = exports.createTestRequiredRule = exports.createEvalRule = exports.createSQLInjectionRule = exports.designRules = exports.loggingRules = exports.codeQualityRules = exports.testRules = exports.securityRules = exports.ArchitectEngine = exports.DecisionEngine = exports.RuleRegistry = void 0;
+exports.createDesignValidatorRule = exports.createNoConsoleRule = exports.createAntiPatternRule = exports.createTestRequiredRule = exports.createPIIDetectionRule = exports.createXSSRule = exports.createEvalRule = exports.createSQLInjectionRule = exports.designRules = exports.loggingRules = exports.codeQualityRules = exports.testRules = exports.securityRules = exports.ArchitectEngine = exports.DecisionEngine = exports.RuleRegistry = void 0;
 __exportStar(require("./types"), exports);
 var RuleRegistry_1 = require("./engine/RuleRegistry");
 Object.defineProperty(exports, "RuleRegistry", { enumerable: true, get: function () { return RuleRegistry_1.RuleRegistry; } });
@@ -35,6 +35,8 @@ Object.defineProperty(exports, "designRules", { enumerable: true, get: function 
 var SecurityRules_2 = require("./rules/SecurityRules");
 Object.defineProperty(exports, "createSQLInjectionRule", { enumerable: true, get: function () { return SecurityRules_2.createSQLInjectionRule; } });
 Object.defineProperty(exports, "createEvalRule", { enumerable: true, get: function () { return SecurityRules_2.createEvalRule; } });
+Object.defineProperty(exports, "createXSSRule", { enumerable: true, get: function () { return SecurityRules_2.createXSSRule; } });
+Object.defineProperty(exports, "createPIIDetectionRule", { enumerable: true, get: function () { return SecurityRules_2.createPIIDetectionRule; } });
 var TestRules_2 = require("./rules/TestRules");
 Object.defineProperty(exports, "createTestRequiredRule", { enumerable: true, get: function () { return TestRules_2.createTestRequiredRule; } });
 var CodeQualityRules_2 = require("./rules/CodeQualityRules");

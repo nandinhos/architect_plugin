@@ -10,7 +10,12 @@ export { codeQualityRules } from './rules/CodeQualityRules';
 export { loggingRules } from './rules/LoggingRules';
 export { designRules } from './rules/DesignRules';
 
-export { createSQLInjectionRule, createEvalRule } from './rules/SecurityRules';
+export {
+  createSQLInjectionRule,
+  createEvalRule,
+  createXSSRule,
+  createPIIDetectionRule,
+} from './rules/SecurityRules';
 export { createTestRequiredRule } from './rules/TestRules';
 export { createAntiPatternRule } from './rules/CodeQualityRules';
 export { createNoConsoleRule } from './rules/LoggingRules';

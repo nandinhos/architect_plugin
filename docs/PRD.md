@@ -1,4 +1,5 @@
 # PRD — Architect Engine v2.0
+
 **Produto:** `@architectai/core` — Runtime de Regras Comportamentais para IA
 **Versão:** 2.0.0
 **Autor:** Nando Dev
@@ -101,13 +102,16 @@ import { ArchitectEngine, createSQLInjectionRule } from '@architectai/core';
 const engine = new ArchitectEngine({ autoFix: false, failOn: 'high' });
 engine.registerRule(createSQLInjectionRule());
 
-const result = engine.runSync({
-  code: 'const q = "SELECT * FROM users WHERE id = " + id',
-  filePath: 'src/db.ts',
-  fileName: 'db.ts',
-  language: 'typescript',
-  metadata: {},
-}, 'after_generation');
+const result = engine.runSync(
+  {
+    code: 'const q = "SELECT * FROM users WHERE id = " + id',
+    filePath: 'src/db.ts',
+    fileName: 'db.ts',
+    language: 'typescript',
+    metadata: {},
+  },
+  'after_generation'
+);
 
 // result.status: 'blocked' | 'warned' | 'ok'
 // result.issues: Issue[]
@@ -122,7 +126,7 @@ const result = engine.runSync({
 
 ```ts
 export interface BehaviorRule {
-  id: string;           // Ex: 'SEC-001'
+  id: string; // Ex: 'SEC-001'
   name: string;
   trigger: TriggerType;
   severity: Severity;
@@ -134,32 +138,32 @@ export interface BehaviorRule {
 
 ### 5.2 Triggers
 
-| Trigger | Quando roda |
-|---------|------------|
+| Trigger             | Quando roda                                      |
+| ------------------- | ------------------------------------------------ |
 | `before_generation` | Antes da IA gerar código (para injetar contexto) |
-| `after_generation` | Depois da IA gerar código (validação principal) |
-| `pre_commit` | Antes do commit git (gate de merge) |
-| `review` | Durante code review (análise assíncrona) |
+| `after_generation`  | Depois da IA gerar código (validação principal)  |
+| `pre_commit`        | Antes do commit git (gate de merge)              |
+| `review`            | Durante code review (análise assíncrona)         |
 
 ### 5.3 Severidade e Decisão
 
-| Severidade | Ação |
-|-----------|------|
+| Severidade | Ação                                                |
+| ---------- | --------------------------------------------------- | ------------- |
 | `critical` | **BLOCK** — Commits bloqueados, correção mandatória |
-| `high` | **WARN** — Correção exigida antes de merge |
-| `medium` | **ALERT** — Logado, mostrado no relatório |
-| `low` | **INFO** | Logado apenas |
+| `high`     | **WARN** — Correção exigida antes de merge          |
+| `medium`   | **ALERT** — Logado, mostrado no relatório           |
+| `low`      | **INFO**                                            | Logado apenas |
 
 ### 5.4 Regras MVP (v2.0)
 
-| ID | Nome | Severidade | Trigger |
-|----|------|-----------|---------|
-| SEC-001 | SQL Injection Detection | critical | after_generation |
-| SEC-002 | Dangerous Function Detection | critical | after_generation |
-| TEST-001 | Test Required | high | after_generation |
-| CQ-001 | Anti-Pattern Detection | high | after_generation |
-| LOG-001 | No Console Rule | medium | after_generation |
-| DES-001 | Design Token Validator | low | after_generation |
+| ID       | Nome                         | Severidade | Trigger          |
+| -------- | ---------------------------- | ---------- | ---------------- |
+| SEC-001  | SQL Injection Detection      | critical   | after_generation |
+| SEC-002  | Dangerous Function Detection | critical   | after_generation |
+| TEST-001 | Test Required                | high       | after_generation |
+| CQ-001   | Anti-Pattern Detection       | high       | after_generation |
+| LOG-001  | No Console Rule              | medium     | after_generation |
+| DES-001  | Design Token Validator       | low        | after_generation |
 
 ---
 
@@ -268,25 +272,32 @@ Cada regra é uma função pura testável. O engine tem 18 testes unitários cob
 
 ## 9. Roadmap
 
-### v2.0 — Atual (MVP)
+### v2.0 — MVP (Concluído)
+
 - [x] Runtime engine completo
 - [x] 6 regras MVP
 - [x] CLI funcional
 - [x] Hook pre-commit
 - [x] Instalador one-line
 
-### v2.1
+### v2.1 — Segurança Avançada (Concluído)
+
 - [x] AST-based CQ-001 (TypeScript Compiler API — parser real, não regex)
 - [x] Output JSON para CI/CD (`architect run --json`, `architect staged --json`)
+- [x] **SEC-003: XSS Detection** (innerHTML, outerHTML, document.write)
+- [x] **SEC-004: PII Exposure Detection** (senhas, tokens, emails, CPFs)
+- [x] install.sh corrigido e testado
+
+### v2.2 — Extensibilidade
+
 - [ ] `architect init --template=react` (boilerplates por stack)
 - [ ] `architect config` (CLI interativa para configurar regras)
-
-### v2.2
 - [ ] AST-based design validator (Babel parser)
 - [ ] Regras para Python (PyLint integration)
 - [ ] Relatórios HTML
 
-### v3.0
+### v3.0 — DSL & Integração
+
 - [ ] DSL de regras declarativas
 - [ ] LSP integration (tempo real)
 - [ ] Web dashboard de métricas
@@ -295,14 +306,14 @@ Cada regra é uma função pura testável. O engine tem 18 testes unitários cob
 
 ## 10. Métricas de Qualidade
 
-| Métrica | Valor |
-|---------|-------|
-| Testes | 29 passing |
-| Regras MVP | 6/6 |
-| AST Analyzer | Implementado (TypeScript Compiler API) |
-| Vulnerabilidades npm | 0 |
-| Erros de tipo | 0 |
-| Erros de lint | 0 |
+| Métrica              | Valor                                                     |
+| -------------------- | --------------------------------------------------------- |
+| Testes               | 29 passing                                                |
+| Regras implementadas | 8 (SEC-001 a SEC-004, TEST-001, CQ-001, LOG-001, DES-001) |
+| AST Analyzer         | Implementado (TypeScript Compiler API)                    |
+| Vulnerabilidades npm | 0                                                         |
+| Erros de tipo        | 0                                                         |
+| Erros de lint        | 0                                                         |
 
 ---
 

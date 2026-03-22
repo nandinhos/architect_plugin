@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] - 2026-03-22
+
+### Added
+
+- **SEC-003: XSS Detection** — Nova regra critical para detecção de Cross-Site Scripting
+  - Detecta `.innerHTML`, `.outerHTML`, `insertAdjacentHTML`, `document.write`
+  - Detecta `javascript:` URLs em href
+  - Auto-fix: substituição por `.textContent`
+- **SEC-004: PII Exposure Detection** — Nova regra high para proteção de dados pessoais
+  - Detecta logging de senhas, tokens, API keys, emails, CPFs, CNPJs, cartões
+  - 8 patterns de detecção cobrindo principais vetores de exposição
+  - Auto-fix: substituição de `console.*` por `logger.info`
+- **install.sh corrigido** — Corrigido path de distribuição e adicionado copy de node_modules
+
+### Changed
+
+- **Total de regras:** 6 → 8 (SEC-001, SEC-002, SEC-003, SEC-004, TEST-001, CQ-001, LOG-001, DES-001)
+- **engine.registerRules()** — Agora aceita 8 regras simultâneas
+
 ## [2.1.0] - 2026-03-20
 
 ### Added
