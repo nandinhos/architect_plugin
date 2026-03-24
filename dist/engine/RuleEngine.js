@@ -17,6 +17,25 @@ class ArchitectEngine {
             this.registry.registerBatch(rules);
         }
     }
+    loadConfig(projectConfig) {
+        if (typeof projectConfig.autoFix === 'boolean') {
+            this.config.autoFix = projectConfig.autoFix;
+        }
+        if (projectConfig.failOn) {
+            this.config.failOn = projectConfig.failOn;
+            this.decisionEngine = new DecisionEngine_1.DecisionEngine(projectConfig.failOn);
+        }
+        if (projectConfig.rules && typeof projectConfig.rules === 'object') {
+            for (const [ruleId, ruleConfig] of Object.entries(projectConfig.rules)) {
+                if (ruleConfig.enabled) {
+                    this.registry.enable(ruleId);
+                }
+                else {
+                    this.registry.disable(ruleId);
+                }
+            }
+        }
+    }
     registerRule(rule) {
         this.registry.register(rule);
     }
@@ -110,16 +129,13 @@ class ArchitectEngine {
         return this.registry.count();
     }
     enableRule(ruleId) {
-        const rule = this.registry.getById(ruleId);
-        if (!rule)
-            return false;
-        return true;
+        return this.registry.enable(ruleId);
     }
     disableRule(ruleId) {
-        return this.registry.unregister(ruleId);
+        return this.registry.disable(ruleId);
     }
     isRuleEnabled(ruleId) {
-        return this.registry.getById(ruleId) !== undefined;
+        return this.registry.isEnabled(ruleId);
     }
 }
 exports.ArchitectEngine = ArchitectEngine;

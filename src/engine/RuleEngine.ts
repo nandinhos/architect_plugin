@@ -4,9 +4,16 @@ import type {
   EvaluationResult,
   EngineConfig,
   TriggerType,
+  Severity,
 } from '../types';
 import { RuleRegistry } from './RuleRegistry';
 import { DecisionEngine } from './DecisionEngine';
+
+interface ProjectConfig {
+  autoFix?: boolean;
+  failOn?: Severity;
+  rules?: Record<string, { enabled: boolean }>;
+}
 
 export class ArchitectEngine {
   private registry: RuleRegistry;
@@ -25,6 +32,27 @@ export class ArchitectEngine {
 
     if (rules.length > 0) {
       this.registry.registerBatch(rules);
+    }
+  }
+
+  loadConfig(projectConfig: ProjectConfig): void {
+    if (typeof projectConfig.autoFix === 'boolean') {
+      this.config.autoFix = projectConfig.autoFix;
+    }
+
+    if (projectConfig.failOn) {
+      this.config.failOn = projectConfig.failOn;
+      this.decisionEngine = new DecisionEngine(projectConfig.failOn);
+    }
+
+    if (projectConfig.rules && typeof projectConfig.rules === 'object') {
+      for (const [ruleId, ruleConfig] of Object.entries(projectConfig.rules)) {
+        if (ruleConfig.enabled) {
+          this.registry.enable(ruleId);
+        } else {
+          this.registry.disable(ruleId);
+        }
+      }
     }
   }
 
@@ -135,16 +163,14 @@ export class ArchitectEngine {
   }
 
   enableRule(ruleId: string): boolean {
-    const rule = this.registry.getById(ruleId);
-    if (!rule) return false;
-    return true;
+    return this.registry.enable(ruleId);
   }
 
   disableRule(ruleId: string): boolean {
-    return this.registry.unregister(ruleId);
+    return this.registry.disable(ruleId);
   }
 
   isRuleEnabled(ruleId: string): boolean {
-    return this.registry.getById(ruleId) !== undefined;
+    return this.registry.isEnabled(ruleId);
   }
 }
