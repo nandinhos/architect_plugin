@@ -120,13 +120,8 @@ function createSQLInjectionRule() {
         enforce(context, result) {
             if (result.valid)
                 return null;
-            let fixed = context.code;
-            for (const { pattern } of SQL_PATTERNS) {
-                fixed = fixed.replace(pattern, '(parameterized placeholder)');
-            }
             return {
-                fixed: true,
-                fixedCode: fixed,
+                fixed: false,
                 suggestions: [
                     'Use prepared statements: db.query("SELECT * FROM users WHERE id = ?", [id])',
                     'Use an ORM that handles parameterization: User.findById(id)',
@@ -154,13 +149,8 @@ function createEvalRule() {
         enforce(context, result) {
             if (result.valid)
                 return null;
-            let fixed = context.code;
-            for (const { pattern } of DANGEROUS_FUNCTIONS) {
-                fixed = fixed.replace(pattern, '/* SAFE: removed dangerous call */');
-            }
             return {
-                fixed: true,
-                fixedCode: fixed,
+                fixed: false,
                 suggestions: [
                     'Evite eval(). Se precisa de lógica dinâmica, use um switch ou Map.',
                     'Evite exec(). Use child_process spawn com argumentos separados se necessário.',
@@ -188,19 +178,14 @@ function createXSSRule() {
         enforce(context, result) {
             if (result.valid)
                 return null;
-            let fixed = context.code;
-            fixed = fixed.replace(/\.innerHTML\s*=/gi, '.textContent =');
-            fixed = fixed.replace(/\.outerHTML\s*=/gi, '.textContent =');
-            fixed = fixed.replace(/insertAdjacentHTML\s*\(/gi, '/* SAFE: removed insertAdjacentHTML */(');
-            fixed = fixed.replace(/document\.write\s*\(/gi, '/* SAFE: removed document.write */(');
             return {
-                fixed: true,
-                fixedCode: fixed,
+                fixed: false,
                 suggestions: [
-                    'Use element.textContent = userInput (seguro)',
-                    'Use DOMPurify para sanitizar HTML: DOMPurify.sanitize(userHtml)',
-                    'Use framework XSS protection (React, Vue, Angular)',
-                    'Use library like DOMPurify ou xss',
+                    'Use element.textContent = userInput (seguro para texto puro)',
+                    'Se precisa renderizar HTML, sanitize com DOMPurify: element.innerHTML = DOMPurify.sanitize(html)',
+                    'Use framework XSS protection (React, Vue, Angular) — eles sanitizam por padrão',
+                    'document.write() deve ser removido — use DOM manipulation moderna',
+                    'javascript: URLs devem ser removidas — use event listeners',
                 ],
             };
         },
@@ -291,15 +276,14 @@ function createPIIDetectionRule() {
         enforce(context, result) {
             if (result.valid)
                 return null;
-            let fixed = context.code;
-            fixed = fixed.replace(/console\.(log|warn|error|info|debug)/gi, 'logger.info');
             return {
-                fixed: true,
-                fixedCode: fixed,
+                fixed: false,
                 suggestions: [
+                    'NUNCA logue dados sensíveis — remova o log ou mascare os dados',
                     'Use logger estruturado com masking: logger.info("Login", { email: maskEmail(userEmail) })',
-                    'Use constants para chaves sensíveis: const MASKED = "***"',
-                    'Configure logger para não expor PII em produção',
+                    'Para senhas: nunca logue, nem mascarado. Senhas não devem existir em logs.',
+                    'Para tokens/API keys: logue apenas os primeiros 4 chars: token.substring(0, 4) + "***"',
+                    'Configure logger com filtro de PII em produção',
                 ],
             };
         },
