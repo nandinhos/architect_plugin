@@ -1,11 +1,14 @@
-export type TriggerType =
-  | 'before_generation'
-  | 'after_generation'
-  | 'pre_commit'
-  | 'review';
+export type TriggerType = 'before_generation' | 'after_generation' | 'pre_commit' | 'review';
 
 export type Severity = 'low' | 'medium' | 'high' | 'critical';
 
+/**
+ * Acao de decisao do engine:
+ * - blocked: critical detectado, exit code 1, impede commit/deploy
+ * - corrected: auto-fix aplicado com sucesso
+ * - warned: high ou medium detectado, exit code 0, alerta visivel
+ * - ok: nenhuma issue, passou limpo
+ */
 export type DecisionAction = 'blocked' | 'corrected' | 'warned' | 'ok';
 
 export interface Issue {
