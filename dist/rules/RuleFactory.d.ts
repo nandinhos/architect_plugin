@@ -5,8 +5,8 @@ interface CreateRuleInput {
     trigger: TriggerType;
     severity: Severity;
     description: string;
-    validate(context: RuleContext): RuleResult;
-    enforce?(context: RuleContext, result: RuleResult): EnforcementResult | null;
+    validate(_: RuleContext): RuleResult;
+    enforce?(_context: RuleContext, _result: RuleResult): EnforcementResult | null;
 }
 export declare function createRule(input: CreateRuleInput): BehaviorRule;
 export {};
