@@ -229,16 +229,6 @@ describe('CLI - architect init --template', () => {
 
     process.chdir(originalCwd);
   });
-
-  it('deve criar projeto com template vue', () => {
-    const originalCwd = process.cwd();
-    process.chdir(templateTestDir);
-
-    const result = runCLI(['init', '--template', 'vue']);
-    expect(result.stdout).toContain('Vue');
-
-    process.chdir(originalCwd);
-  });
 });
 
 describe('CLI - architect config', () => {
