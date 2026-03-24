@@ -110,10 +110,11 @@ architect run src/ --json
 ## Qualidade
 
 ```
-npm test         → 58/58 passing
-npm run lint     → 0 errors
+npm test          → 119/119 passing
+npm run lint      → 0 errors
 npm run typecheck → 0 errors
-npm audit        → 0 vulnerabilities
+npm audit         → 0 vulnerabilities
+npm test:coverage → 89% statements, 81% branches
 ```
 
 ---

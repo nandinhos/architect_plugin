@@ -288,10 +288,18 @@ Cada regra é uma função pura testável. O engine tem 18 testes unitários cob
 - [x] **SEC-004: PII Exposure Detection** (senhas, tokens, emails, CPFs)
 - [x] install.sh corrigido e testado
 
-### v2.2 — Extensibilidade
+### v2.2 — Extensibilidade (Parcial)
 
+- [x] `createRule()` factory para regras customizadas
+- [x] `architect health` — verificação de protocolos do projeto
+- [x] Configuração por projeto (`.architect/config.json` respeitado pelo engine)
+- [x] `enable`/`disable` de regras em runtime
+- [x] AST suporte a TSX/JSX
+- [x] Complexidade ciclomática (CQ-006)
+- [x] Console detection via AST (CQ-005)
 - [ ] `architect init --template=react` (boilerplates por stack)
-- [ ] `architect config` (CLI interativa para configurar regras)
+- [ ] `architect config` interativo (CLI)
+- [ ] Carregamento de regras de `.architect/rules/`
 - [ ] AST-based design validator (Babel parser)
 - [ ] Regras para Python (PyLint integration)
 - [ ] Relatórios HTML
@@ -308,8 +316,13 @@ Cada regra é uma função pura testável. O engine tem 18 testes unitários cob
 
 | Métrica              | Valor                                                     |
 | -------------------- | --------------------------------------------------------- |
-| Testes               | 29 passing                                                |
+| Testes               | 119 passing                                               |
 | Regras implementadas | 8 (SEC-001 a SEC-004, TEST-001, CQ-001, LOG-001, DES-001) |
+| AST Analyzer         | TSX/JSX, console detection, complexidade ciclomatica      |
+| Cobertura            | 89% statements, 81% branches                              |
+| Vulnerabilidades npm | 0                                                         |
+| Erros de tipo        | 0                                                         |
+| Erros de lint        | 0                                                         |
 | AST Analyzer         | Implementado (TypeScript Compiler API)                    |
 | Vulnerabilidades npm | 0                                                         |
 | Erros de tipo        | 0                                                         |
