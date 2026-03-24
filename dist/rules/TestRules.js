@@ -2,6 +2,8 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.testRules = void 0;
 exports.createTestRequiredRule = createTestRequiredRule;
+const fs_1 = require("fs");
+const path_1 = require("path");
 function createTestRequiredRule() {
     return {
         id: 'TEST-001',
@@ -22,13 +24,17 @@ function createTestRequiredRule() {
                 return { ruleId: 'TEST-001', ruleName: 'Test Required Rule', valid: true, issues: [] };
             }
             const sourceExtensions = ['.ts', '.tsx', '.js', '.jsx'];
-            const isSourceFile = sourceExtensions.some(ext => fileName.endsWith(ext));
+            const isSourceFile = sourceExtensions.some((ext) => fileName.endsWith(ext));
             if (!isSourceFile) {
                 return { ruleId: 'TEST-001', ruleName: 'Test Required Rule', valid: true, issues: [] };
             }
             const testFileName = fileName
                 .replace(/\.ts(x)?$/, '.test.ts$1')
                 .replace(/\.js(x)?$/, '.test.js$1');
+            const testFilePath = (0, path_1.join)((0, path_1.dirname)(filePath), testFileName);
+            if ((0, fs_1.existsSync)(testFilePath)) {
+                return { ruleId: 'TEST-001', ruleName: 'Test Required Rule', valid: true, issues: [] };
+            }
             const issue = {
                 code: 'TEST-001',
                 message: `Arquivo fonte sem teste correspondente. Crie: ${testFileName}`,
@@ -60,10 +66,7 @@ describe('${fileName}', () => {
             return {
                 fixed: true,
                 fixedCode: testTemplate,
-                suggestions: [
-                    `Test file: ${testFileName}`,
-                    'Follow TDD: Red → Green → Refactor',
-                ],
+                suggestions: [`Test file: ${testFileName}`, 'Follow TDD: Red → Green → Refactor'],
             };
         },
     };

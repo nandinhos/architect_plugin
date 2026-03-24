@@ -1,4 +1,6 @@
 import type { BehaviorRule, RuleContext, RuleResult, Issue } from '../types';
+import { existsSync } from 'fs';
+import { join, dirname } from 'path';
 
 export function createTestRequiredRule(): BehaviorRule {
   return {
@@ -15,17 +17,18 @@ export function createTestRequiredRule(): BehaviorRule {
         return { ruleId: 'TEST-001', ruleName: 'Test Required Rule', valid: true, issues: [] };
       }
 
-      const isTestFile = fileName.endsWith('.test.ts') ||
-                         fileName.endsWith('.spec.ts') ||
-                         fileName.endsWith('.test.js') ||
-                         fileName.endsWith('.spec.js');
+      const isTestFile =
+        fileName.endsWith('.test.ts') ||
+        fileName.endsWith('.spec.ts') ||
+        fileName.endsWith('.test.js') ||
+        fileName.endsWith('.spec.js');
 
       if (isTestFile) {
         return { ruleId: 'TEST-001', ruleName: 'Test Required Rule', valid: true, issues: [] };
       }
 
       const sourceExtensions = ['.ts', '.tsx', '.js', '.jsx'];
-      const isSourceFile = sourceExtensions.some(ext => fileName.endsWith(ext));
+      const isSourceFile = sourceExtensions.some((ext) => fileName.endsWith(ext));
 
       if (!isSourceFile) {
         return { ruleId: 'TEST-001', ruleName: 'Test Required Rule', valid: true, issues: [] };
@@ -34,6 +37,12 @@ export function createTestRequiredRule(): BehaviorRule {
       const testFileName = fileName
         .replace(/\.ts(x)?$/, '.test.ts$1')
         .replace(/\.js(x)?$/, '.test.js$1');
+
+      const testFilePath = join(dirname(filePath), testFileName);
+
+      if (existsSync(testFilePath)) {
+        return { ruleId: 'TEST-001', ruleName: 'Test Required Rule', valid: true, issues: [] };
+      }
 
       const issue: Issue = {
         code: 'TEST-001',
@@ -70,10 +79,7 @@ describe('${fileName}', () => {
       return {
         fixed: true,
         fixedCode: testTemplate,
-        suggestions: [
-          `Test file: ${testFileName}`,
-          'Follow TDD: Red → Green → Refactor',
-        ],
+        suggestions: [`Test file: ${testFileName}`, 'Follow TDD: Red → Green → Refactor'],
       };
     },
   };
