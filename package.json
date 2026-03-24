@@ -1,6 +1,6 @@
 {
   "name": "architect-ai",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "Runtime de Regras Comportamentais — valida e bloqueia código inseguro, sem teste e fora de padrão gerado por IA",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

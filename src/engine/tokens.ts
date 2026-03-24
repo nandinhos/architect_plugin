@@ -1,6 +1,6 @@
 const tokens = {
   project: 'architect-ai',
-  version: '2.1.0',
+  version: '2.2.0',
   dna: {
     primary: '#6366F1',
     primary_name: 'Architect Indigo',
@@ -20,8 +20,18 @@ const tokens = {
     indigo: { 50: '#EEF2FF', 500: '#6366F1', 900: '#312E81' },
     slate: { 50: '#F8FAFC', 500: '#64748B', 900: '#0F172A' },
   },
-  principles: ['Visual DNA First', 'Hierarchy & Focus', 'Consistent Spacing', 'Interactive Feedback'],
-  anti_patterns: ['Generic Gradients', 'Placeholder-only Forms', 'Emoji-only Icons', 'Hardcoded Colors'],
+  principles: [
+    'Visual DNA First',
+    'Hierarchy & Focus',
+    'Consistent Spacing',
+    'Interactive Feedback',
+  ],
+  anti_patterns: [
+    'Generic Gradients',
+    'Placeholder-only Forms',
+    'Emoji-only Icons',
+    'Hardcoded Colors',
+  ],
 };
 
 export default tokens;
