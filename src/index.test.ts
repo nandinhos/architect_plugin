@@ -1,4 +1,4 @@
-import { ArchitectEngine, DecisionEngine } from './index';
+import { ArchitectEngine, DecisionEngine, RuleContext, TriggerType, Severity } from './index';
 import { createSQLInjectionRule, createEvalRule } from './rules/SecurityRules';
 import { createTestRequiredRule } from './rules/TestRules';
 import { createAntiPatternRule } from './rules/CodeQualityRules';
@@ -65,7 +65,7 @@ describe('ArchitectEngine', () => {
 
       const result = engine.runSync(context, 'after_generation');
       expect(result.status).toBe('blocked');
-      expect(result.issues.some(i => i.code === 'SEC-002')).toBe(true);
+      expect(result.issues.some((i) => i.code === 'SEC-002')).toBe(true);
     });
 
     it('should pass clean code', () => {
@@ -78,7 +78,7 @@ describe('ArchitectEngine', () => {
       };
 
       const result = engine.runSync(context, 'after_generation');
-      expect(result.issues.filter(i => i.code === 'SEC-001')).toHaveLength(0);
+      expect(result.issues.filter((i) => i.code === 'SEC-001')).toHaveLength(0);
     });
   });
 
@@ -183,25 +183,41 @@ describe('ArchitectEngine', () => {
       };
 
       const result = engine.runSync(context, 'after_generation');
-      expect(result.issues.filter(i => i.code === 'LOG-001')).toHaveLength(0);
+      expect(result.issues.filter((i) => i.code === 'LOG-001')).toHaveLength(0);
     });
   });
 
   describe('Decision Engine', () => {
     it('should block on critical issues', () => {
       const decision = new DecisionEngine();
-      const result = decision.evaluate([
-        { ruleId: 'SEC-001', ruleName: 'SQLi', valid: false, issues: [{ code: 'SEC-001', message: 'SQLi', severity: 'critical' }] },
-      ], 'after_generation');
+      const result = decision.evaluate(
+        [
+          {
+            ruleId: 'SEC-001',
+            ruleName: 'SQLi',
+            valid: false,
+            issues: [{ code: 'SEC-001', message: 'SQLi', severity: 'critical' }],
+          },
+        ],
+        'after_generation'
+      );
 
       expect(result.status).toBe('blocked');
     });
 
     it('should warn on high severity when failOn=high', () => {
       const decision = new DecisionEngine('high');
-      const result = decision.evaluate([
-        { ruleId: 'TEST-001', ruleName: 'Test', valid: false, issues: [{ code: 'TEST-001', message: 'No test', severity: 'high' }] },
-      ], 'after_generation');
+      const result = decision.evaluate(
+        [
+          {
+            ruleId: 'TEST-001',
+            ruleName: 'Test',
+            valid: false,
+            issues: [{ code: 'TEST-001', message: 'No test', severity: 'high' }],
+          },
+        ],
+        'after_generation'
+      );
 
       expect(result.status).toBe('warned');
     });
@@ -214,11 +230,32 @@ describe('ArchitectEngine', () => {
 
     it('should aggregate severity counts', () => {
       const decision = new DecisionEngine();
-      const result = decision.evaluate([
-        { ruleId: 'A', ruleName: 'A', valid: false, issues: [{ code: 'A', message: 'A', severity: 'critical' }] },
-        { ruleId: 'B', ruleName: 'B', valid: false, issues: [{ code: 'B', message: 'B', severity: 'low' }, { code: 'C', message: 'C', severity: 'low' }] },
-        { ruleId: 'D', ruleName: 'D', valid: false, issues: [{ code: 'D', message: 'D', severity: 'medium' }] },
-      ], 'after_generation');
+      const result = decision.evaluate(
+        [
+          {
+            ruleId: 'A',
+            ruleName: 'A',
+            valid: false,
+            issues: [{ code: 'A', message: 'A', severity: 'critical' }],
+          },
+          {
+            ruleId: 'B',
+            ruleName: 'B',
+            valid: false,
+            issues: [
+              { code: 'B', message: 'B', severity: 'low' },
+              { code: 'C', message: 'C', severity: 'low' },
+            ],
+          },
+          {
+            ruleId: 'D',
+            ruleName: 'D',
+            valid: false,
+            issues: [{ code: 'D', message: 'D', severity: 'medium' }],
+          },
+        ],
+        'after_generation'
+      );
 
       expect(result.summary.critical).toBe(1);
       expect(result.summary.high).toBe(0);
@@ -226,5 +263,182 @@ describe('ArchitectEngine', () => {
       expect(result.summary.low).toBe(2);
       expect(result.rulesEvaluated).toBe(3);
     });
+  });
+
+  describe('Rule Enable/Disable', () => {
+    it('should not execute disabled rules', () => {
+      engine.registerRule(createSQLInjectionRule());
+      engine.disableRule('SEC-001');
+
+      const context = {
+        code: 'const query = "SELECT * FROM users WHERE id = " + userId',
+        filePath: 'src/users.ts',
+        fileName: 'users.ts',
+        language: 'typescript' as const,
+        metadata: {},
+      };
+
+      const result = engine.runSync(context, 'after_generation');
+      expect(result.rulesEvaluated).toBe(0);
+      expect(result.status).toBe('ok');
+    });
+
+    it('should re-enable disabled rules', () => {
+      engine.registerRule(createSQLInjectionRule());
+      engine.disableRule('SEC-001');
+      expect(engine.isRuleEnabled('SEC-001')).toBe(false);
+
+      engine.enableRule('SEC-001');
+      expect(engine.isRuleEnabled('SEC-001')).toBe(true);
+    });
+
+    it('should return false when enabling non-existent rule', () => {
+      expect(engine.enableRule('NON-EXISTENT')).toBe(false);
+    });
+
+    it('should return false when disabling non-existent rule', () => {
+      expect(engine.disableRule('NON-EXISTENT')).toBe(false);
+    });
+  });
+
+  describe('loadConfig', () => {
+    it('should apply config and disable rules', () => {
+      engine.registerRule(createSQLInjectionRule());
+
+      engine.loadConfig({
+        rules: { 'SEC-001': { enabled: false } },
+      });
+
+      expect(engine.isRuleEnabled('SEC-001')).toBe(false);
+    });
+
+    it('should apply failOn from config', () => {
+      engine.registerRule(createTestRequiredRule());
+
+      engine.loadConfig({ failOn: 'medium' });
+
+      const context = {
+        code: 'export function hello() {}',
+        filePath: 'src/utils.ts',
+        fileName: 'utils.ts',
+        language: 'typescript' as const,
+        metadata: {},
+      };
+
+      const result = engine.runSync(context, 'after_generation');
+      expect(result.status).toBe('warned');
+    });
+
+    it('should not crash on empty config', () => {
+      engine.registerRule(createSQLInjectionRule());
+      engine.loadConfig({});
+
+      expect(engine.getRuleCount()).toBe(1);
+    });
+  });
+});
+
+describe('createRule', () => {
+  const { createRule } = require('./rules/RuleFactory');
+
+  it('should create a valid rule', () => {
+    const rule = createRule({
+      id: 'TEST-CUSTOM',
+      name: 'Custom Test Rule',
+      trigger: 'after_generation',
+      severity: 'medium',
+      description: 'Test rule',
+      validate: () => ({ ruleId: 'TEST-CUSTOM', ruleName: 'Custom', valid: true, issues: [] }),
+    });
+
+    expect(rule.id).toBe('TEST-CUSTOM');
+    expect(rule.trigger).toBe('after_generation');
+    expect(rule.severity).toBe('medium');
+  });
+
+  it('should throw on missing id', () => {
+    expect(() =>
+      createRule({
+        id: '',
+        name: 'Test',
+        trigger: 'after_generation',
+        severity: 'low',
+        validate: () => ({ ruleId: '', ruleName: '', valid: true, issues: [] }),
+      })
+    ).toThrow('id');
+  });
+
+  it('should throw on invalid trigger', () => {
+    expect(() =>
+      createRule({
+        id: 'T',
+        name: 'T',
+        trigger: 'invalid' as TriggerType,
+        severity: 'low',
+        validate: () => ({ ruleId: 'T', ruleName: 'T', valid: true, issues: [] }),
+      })
+    ).toThrow('trigger');
+  });
+
+  it('should throw on invalid severity', () => {
+    expect(() =>
+      createRule({
+        id: 'T',
+        name: 'T',
+        trigger: 'after_generation',
+        severity: 'extreme' as Severity,
+        validate: () => ({ ruleId: 'T', ruleName: 'T', valid: true, issues: [] }),
+      })
+    ).toThrow('severity');
+  });
+
+  it('should throw on non-function validate', () => {
+    expect(() =>
+      createRule({
+        id: 'T',
+        name: 'T',
+        trigger: 'after_generation',
+        severity: 'low',
+        validate: 'not a function' as unknown as RuleContext['language'],
+      })
+    ).toThrow('validate');
+  });
+
+  it('should work with engine integration', () => {
+    const rule = createRule({
+      id: 'CUSTOM-001',
+      name: 'No Foo Rule',
+      trigger: 'after_generation',
+      severity: 'high',
+      description: 'Detecta uso de foo',
+      validate: (ctx: RuleContext) => {
+        const hasFoo = ctx.code.includes('foo');
+        return {
+          ruleId: 'CUSTOM-001',
+          ruleName: 'No Foo Rule',
+          valid: !hasFoo,
+          issues: hasFoo
+            ? [{ code: 'CUSTOM-001', message: 'foo detectado', severity: 'high' }]
+            : [],
+        };
+      },
+    });
+
+    const eng = new ArchitectEngine();
+    eng.registerRule(rule);
+
+    const result = eng.runSync(
+      {
+        code: 'const foo = 1;',
+        filePath: 'test.ts',
+        fileName: 'test.ts',
+        language: 'typescript',
+        metadata: {},
+      },
+      'after_generation'
+    );
+
+    expect(result.status).toBe('warned');
+    expect(result.issues).toContainEqual(expect.objectContaining({ code: 'CUSTOM-001' }));
   });
 });
