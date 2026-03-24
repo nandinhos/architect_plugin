@@ -15,14 +15,14 @@ export class DecisionEngine {
   }
 
   evaluate(results: RuleResult[], triggeredBy: string): EvaluationResult {
-    const allIssues = results.flatMap(r => r.issues);
+    const allIssues = results.flatMap((r) => r.issues);
     const correctedCode = this.tryFix(results);
 
     const summary = {
-      critical: allIssues.filter(i => i.severity === 'critical').length,
-      high: allIssues.filter(i => i.severity === 'high').length,
-      medium: allIssues.filter(i => i.severity === 'medium').length,
-      low: allIssues.filter(i => i.severity === 'low').length,
+      critical: allIssues.filter((i) => i.severity === 'critical').length,
+      high: allIssues.filter((i) => i.severity === 'high').length,
+      medium: allIssues.filter((i) => i.severity === 'medium').length,
+      low: allIssues.filter((i) => i.severity === 'low').length,
     };
 
     const status = this.decide(allIssues);
@@ -38,7 +38,7 @@ export class DecisionEngine {
   }
 
   private decide(issues: Issue[]): DecisionAction {
-    if (issues.some(i => i.severity === 'critical')) {
+    if (issues.some((i) => i.severity === 'critical')) {
       return 'blocked';
     }
 
@@ -53,7 +53,7 @@ export class DecisionEngine {
       return 'warned';
     }
 
-    if (issues.some(i => i.severity === 'medium')) {
+    if (issues.some((i) => i.severity === 'medium')) {
       return 'warned';
     }
 
@@ -61,12 +61,17 @@ export class DecisionEngine {
   }
 
   private tryFix(results: RuleResult[]): string | undefined {
-    const withFixes = results.filter(r => r.fixedCode && r.valid === false);
+    const withFixes = results.filter((r) => r.fixedCode && r.valid === false);
     if (withFixes.length === 0) return undefined;
 
-    return withFixes
-      .map(r => r.fixedCode)
-      .filter(Boolean)
-      .join('\n');
+    const uniqueFixes = [
+      ...new Set(
+        withFixes
+          .map((r) => r.fixedCode)
+          .filter((code): code is string => typeof code === 'string' && code.length > 0)
+      ),
+    ];
+
+    return uniqueFixes.join('\n');
   }
 }
