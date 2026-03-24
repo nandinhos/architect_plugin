@@ -372,8 +372,31 @@ switch (command) {
   Comandos:
     architect run <file>   Analisar arquivo
     architect rules       Listar regras
-    architect version     Versão
+    architect version     Versao
 `);
+        break;
+    }
+    case 'health': {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const { ArchitectDashboard } = require('../components/ArchitectDashboard');
+        const dashboard = new ArchitectDashboard({
+            dna: { primary: tokens_1.default.dna.primary, background: tokens_1.default.dna.background },
+        });
+        const detailed = dashboard.getDetailedStatus();
+        if (asJson) {
+            console.log(JSON.stringify(detailed, null, 2));
+            break;
+        }
+        console.log('\n  Architect Health Check\n');
+        console.log(`  Score: ${detailed.score}/100\n`);
+        for (const p of detailed.protocols) {
+            const icon = p.active ? '[OK]' : '[FALTA]';
+            console.log(`  ${icon} ${p.name}: ${p.reason}`);
+        }
+        console.log('');
+        if (detailed.score < 100) {
+            console.log('  Execute "architect init" para configurar protocolos faltantes.\n');
+        }
         break;
     }
     default:
@@ -385,8 +408,9 @@ switch (command) {
     architect run <file|dir>    Analisar arquivo ou diretório
     architect staged            Analisar arquivos em staging (git)
     architect rules             Listar regras registradas
-    architect version           Versão do engine
-    architect config            Mostrar/editar configuração
+    architect health            Verificar protocolos do projeto
+    architect version           Versao do engine
+    architect config            Mostrar/editar configuracao
 
   Examples:
     architect init
