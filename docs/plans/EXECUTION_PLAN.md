@@ -119,50 +119,40 @@ npm run build && npm test && npm run lint && npm run typecheck
 
 ## Stack 3 — CONFIGURAÇÃO POR PROJETO [P1]
 
+**Status:** ✅ CONCLUÍDO
 **Responsável:** CLI + Engine
 **Branch:** `feat/config`
 **Depende de:** Stack 1
 **Risco se ignorar:** `.architect/config.json` é criado pelo init mas ignorado pelo engine
 
-- [ ] 3.1 — `src/engine/RuleEngine.ts` — Adicionar `loadConfig(configPath: string)` que lê JSON e aplica `autoFix`, `failOn`, `rules.enabled`
-- [ ] 3.2 — `src/engine/RuleRegistry.ts` — Adicionar `enable(id)` / `disable(id)` — flag boolean por regra, não remover do array
-- [ ] 3.3 — `src/cli/index.ts:15` — Substituir `ENGINE` hardcoded por: ler `.architect/config.json` se existir, senão usar defaults
-- [ ] 3.4 — `src/cli/index.ts:478` — `enableRule`/`disableRule` devem chamar `ENGINE.enableRule(id)` além de salvar JSON
-- [ ] 3.5 — Tests — engine com `TEST-001: disabled` não deve flagar arquivo sem teste
-- [ ] 3.6 — Tests — `loadConfig` com JSON inválido deve usar defaults e logar warning
+- [x] 3.1 — `src/engine/RuleEngine.ts` — `loadConfig()` que aplica `autoFix`, `failOn`, `rules.enabled`
+- [x] 3.2 — `src/engine/RuleRegistry.ts` — `enable()` / `disable()` / `isEnabled()` via Set de desabilitadas
+- [x] 3.3 — `src/cli/index.ts` — Lê `.architect/config.json` se existir e chama `ENGINE.loadConfig()`
+- [x] 3.4 — `src/cli/index.ts` — `enableRule`/`disableRule` chamam ENGINE + salvam JSON
+- [x] 3.5 — Tests — regra desabilitada não executa (4 testes)
+- [x] 3.6 — Tests — loadConfig com config vazio/inválido funciona (3 testes)
 
-**Critério de aceite:** `architect config disable LOG-001` efetivamente desabilita a regra no runtime.
-
-**Validação:**
-
-```bash
-npm run build && npm test && npm run lint && npm run typecheck
-```
+**Critério de aceite:** ✅ `architect config disable LOG-001` desabilita regra no runtime.
 
 ---
 
 ## Stack 4 — REGRAS CUSTOMIZADAS [P1]
 
+**Status:** ✅ PARCIAL (API pronta, carregamento de arquivos adiado)
 **Responsável:** Engine + CLI
 **Branch:** `feat/custom-rules`
 **Depende de:** Stack 3
 **Risco se ignorar:** PRD promete extensibilidade que não existe
 
-- [ ] 4.1 — `src/rules/RuleFactory.ts` (novo) — Criar `createRule(config)` factory function que aceita `{id, name, trigger, severity, validate, enforce}` e retorna `BehaviorRule`
-- [ ] 4.2 — `src/index.ts` — Exportar `createRule` na API pública
-- [ ] 4.3 — `src/cli/index.ts` — Adicionar `loadCustomRules(dir)` — escaneia `.architect/rules/*.ts/.js`, faz `require()`, registra regras válidas
-- [ ] 4.4 — `src/cli/index.ts:17` — Chamar `loadCustomRules('.architect/rules')` após registrar regras padrão
-- [ ] 4.5 — Validation — Regra customizada deve ter `id`, `name`, `trigger`, `severity`, `validate` antes de registrar
-- [ ] 4.6 — Tests — Criar regra custom em fixture, carregar, executar, verificar resultado (E2E)
-- [ ] 4.7 — Docs — Atualizar `PRD.md` seção 6.1 com exemplo real de `createRule`
+- [x] 4.1 — `src/rules/RuleFactory.ts` (novo) — `createRule()` com validação de todos os campos
+- [x] 4.2 — `src/index.ts` — `createRule` exportado na API pública
+- [~] 4.3 — `loadCustomRules(dir)` — **adiado** (requer require dinâmico de .ts, complexidade alta)
+- [~] 4.4 — Integração no CLI — **adiado** (depende de 4.3)
+- [x] 4.5 — Validação — erros claros para id, name, trigger, severity, validate inválidos
+- [x] 4.6 — Tests — 6 testes (criação, validação, integração com engine)
+- [~] 4.7 — Docs — Atualizar PRD.md — **pendente**
 
-**Critério de aceite:** Usuário pode criar `.architect/rules/meu-projeto.ts` com regras próprias.
-
-**Validação:**
-
-```bash
-npm run build && npm test && npm run lint && npm run typecheck
-```
+**Critério de aceite:** ✅ API `createRule()` funcional e testada. Carregamento de arquivos em Sprint futuro.
 
 ---
 
@@ -278,10 +268,10 @@ npm run test:coverage
 
 | Sprint | Stack                  | Status       | Data       | Notas                            |
 | ------ | ---------------------- | ------------ | ---------- | -------------------------------- |
-| 1      | Stack 1 (Segurança)    | ✅ Concluído | 2026-03-23 | execFileSync + auto-fix removido |
+| 1      | Stack 1 (Seguranca)    | ✅ Concluído | 2026-03-23 | execFileSync + auto-fix removido |
 | 1      | Stack 2 (Triggers)     | ✅ Concluído | 2026-03-23 | after_generation para staged     |
-| 2      | Stack 3 (Config)       | ⬜ Pendente  | —          | —                                |
-| 2      | Stack 4 (Custom Rules) | ⬜ Pendente  | —          | —                                |
+| 2      | Stack 3 (Config)       | ✅ Concluído | 2026-03-23 | loadConfig + enable/disable      |
+| 2      | Stack 4 (Custom Rules) | 🟡 Parcial   | 2026-03-23 | createRule pronto, loader adiado |
 | 3      | Stack 5 (AST)          | ⬜ Pendente  | —          | —                                |
 | 3      | Stack 6 (Dashboard)    | ⬜ Pendente  | —          | —                                |
 | 3      | Stack 7 (Testes)       | ⬜ Pendente  | —          | Herda 1.7, 2.3, 2.4              |
@@ -292,6 +282,15 @@ npm run test:coverage
 ```
 build:      ✅
 test:       61/61 passing
+lint:       0 errors
+typecheck:  0 errors
+```
+
+### Validação Sprint 2
+
+```
+build:      ✅
+test:       74/74 passing
 lint:       0 errors
 typecheck:  0 errors
 ```
