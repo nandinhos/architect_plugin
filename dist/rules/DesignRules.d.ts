@@ -8,6 +8,10 @@ interface DesignTokenSet {
     muted?: string;
     border?: string;
 }
+export declare function createHardcodedColorRule(tokens?: DesignTokenSet): BehaviorRule;
+export declare function createGenericGradientRule(): BehaviorRule;
+export declare function createPlaceholderLabelRule(): BehaviorRule;
+export declare function createEmojiIconRule(): BehaviorRule;
 export declare function createDesignValidatorRule(tokens?: DesignTokenSet): BehaviorRule;
 export declare const designRules: (tokens?: DesignTokenSet) => BehaviorRule[];
 export {};

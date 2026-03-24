@@ -12,13 +12,13 @@ class DecisionEngine {
         this.failOn = failOn;
     }
     evaluate(results, triggeredBy) {
-        const allIssues = results.flatMap(r => r.issues);
+        const allIssues = results.flatMap((r) => r.issues);
         const correctedCode = this.tryFix(results);
         const summary = {
-            critical: allIssues.filter(i => i.severity === 'critical').length,
-            high: allIssues.filter(i => i.severity === 'high').length,
-            medium: allIssues.filter(i => i.severity === 'medium').length,
-            low: allIssues.filter(i => i.severity === 'low').length,
+            critical: allIssues.filter((i) => i.severity === 'critical').length,
+            high: allIssues.filter((i) => i.severity === 'high').length,
+            medium: allIssues.filter((i) => i.severity === 'medium').length,
+            low: allIssues.filter((i) => i.severity === 'low').length,
         };
         const status = this.decide(allIssues);
         return {
@@ -31,7 +31,7 @@ class DecisionEngine {
         };
     }
     decide(issues) {
-        if (issues.some(i => i.severity === 'critical')) {
+        if (issues.some((i) => i.severity === 'critical')) {
             return 'blocked';
         }
         const maxSeverity = issues.reduce((max, issue) => {
@@ -44,19 +44,21 @@ class DecisionEngine {
         if (SEVERITY_ORDER[maxSeverity] >= SEVERITY_ORDER[this.failOn]) {
             return 'warned';
         }
-        if (issues.some(i => i.severity === 'medium')) {
+        if (issues.some((i) => i.severity === 'medium')) {
             return 'warned';
         }
         return 'ok';
     }
     tryFix(results) {
-        const withFixes = results.filter(r => r.fixedCode && r.valid === false);
+        const withFixes = results.filter((r) => r.fixedCode && r.valid === false);
         if (withFixes.length === 0)
             return undefined;
-        return withFixes
-            .map(r => r.fixedCode)
-            .filter(Boolean)
-            .join('\n');
+        const uniqueFixes = [
+            ...new Set(withFixes
+                .map((r) => r.fixedCode)
+                .filter((code) => typeof code === 'string' && code.length > 0)),
+        ];
+        return uniqueFixes.join('\n');
     }
 }
 exports.DecisionEngine = DecisionEngine;
