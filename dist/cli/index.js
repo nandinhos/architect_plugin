@@ -53,7 +53,6 @@ function loadCustomRules() {
     for (const file of files) {
         const fullPath = (0, path_1.join)(rulesDir, file);
         try {
-            // eslint-disable-next-line @typescript-eslint/no-require-imports
             const mod = require(fullPath);
             const rules = mod.default ?? mod.rules ?? mod;
             const candidates = Array.isArray(rules) ? rules : [rules];
@@ -104,7 +103,7 @@ function getStagedDiff() {
 }
 function getFileDiff(filename) {
     try {
-        return (0, child_process_1.execFileSync)('git', ['diff', 'HEAD', '--', filename], { encoding: 'utf8' });
+        return (0, child_process_1.execFileSync)('git', ['diff', '--cached', 'HEAD', '--', filename], { encoding: 'utf8' });
     }
     catch {
         return '';
@@ -217,41 +216,45 @@ function runOnStaged(asJson = false) {
         process.exit(1);
 }
 function runOnDir(dirPath, asJson = false) {
-    let files = [];
-    try {
-        files = (0, fs_1.readdirSync)(dirPath);
-    }
-    catch {
-        console.error(`Directory not found: ${dirPath}`);
-        return;
-    }
-    const supportedExts = ['.ts', '.tsx', '.js', '.jsx'];
     const allResults = [];
-    for (const file of files) {
-        const full = (0, path_1.join)(dirPath, file);
+    const supportedExts = ['.ts', '.tsx', '.js', '.jsx'];
+    function scanDir(currentDir) {
+        let files = [];
         try {
-            if ((0, fs_1.statSync)(full).isDirectory())
+            files = (0, fs_1.readdirSync)(currentDir);
+        }
+        catch {
+            return;
+        }
+        for (const file of files) {
+            const full = (0, path_1.join)(currentDir, file);
+            try {
+                if ((0, fs_1.statSync)(full).isDirectory()) {
+                    scanDir(full);
+                    continue;
+                }
+            }
+            catch {
                 continue;
+            }
+            const ext = (0, path_1.extname)(file);
+            if (!supportedExts.includes(ext))
+                continue;
+            let code;
+            try {
+                code = (0, fs_1.readFileSync)(full, 'utf8');
+            }
+            catch {
+                continue;
+            }
+            const context = buildContext(full, code);
+            const result = ENGINE.runSync(context, 'after_generation');
+            allResults.push(result);
+            if (!asJson)
+                printReport(result, true);
         }
-        catch {
-            continue;
-        }
-        const ext = (0, path_1.extname)(file);
-        if (!supportedExts.includes(ext))
-            continue;
-        let code;
-        try {
-            code = (0, fs_1.readFileSync)(full, 'utf8');
-        }
-        catch {
-            continue;
-        }
-        const context = buildContext(full, code);
-        const result = ENGINE.runSync(context, 'after_generation');
-        allResults.push(result);
-        if (!asJson)
-            printReport(result, true);
     }
+    scanDir(dirPath);
     if (asJson) {
         console.log(JSON.stringify({
             status: allResults.some((r) => r.status === 'blocked') ? 'blocked' : 'ok',
@@ -332,6 +335,9 @@ switch (command) {
             if (initArgs[i] === '--template' && initArgs[i + 1]) {
                 template = initArgs[i + 1];
             }
+            else if (initArgs[i].startsWith('--template=')) {
+                template = initArgs[i].split('=')[1];
+            }
         }
         const templates = {
             default: { primary: '#6366F1', background: '#F9FAFB', name: 'Default Indigo' },
@@ -347,8 +353,9 @@ switch (command) {
         }
         const templateConfig = templates[template] || templates.default;
         (0, fs_1.mkdirSync)(archDir, { recursive: true });
+        (0, fs_1.mkdirSync)((0, path_1.join)(archDir, 'design'), { recursive: true });
         (0, fs_1.mkdirSync)((0, path_1.join)(archDir, 'rules'), { recursive: true });
-        (0, fs_1.writeFileSync)((0, path_1.join)(archDir, 'tokens.json'), JSON.stringify({
+        (0, fs_1.writeFileSync)((0, path_1.join)(archDir, 'design', 'tokens.json'), JSON.stringify({
             project: cwd.split('/').pop() || 'my-project',
             version: tokens_1.default.version,
             dna: {

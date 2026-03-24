@@ -106,7 +106,7 @@ function getStagedDiff(): string {
 
 function getFileDiff(filename: string): string {
   try {
-    return execFileSync('git', ['diff', 'HEAD', '--', filename], { encoding: 'utf8' });
+    return execFileSync('git', ['diff', '--cached', 'HEAD', '--', filename], { encoding: 'utf8' });
   } catch {
     return '';
   }
@@ -237,42 +237,48 @@ function runOnStaged(asJson = false): void {
 }
 
 function runOnDir(dirPath: string, asJson = false): void {
-  let files: string[] = [];
-
-  try {
-    files = readdirSync(dirPath);
-  } catch {
-    console.error(`Directory not found: ${dirPath}`);
-    return;
-  }
-
-  const supportedExts = ['.ts', '.tsx', '.js', '.jsx'];
   const allResults: ReturnType<typeof ENGINE.runSync>[] = [];
+  const supportedExts = ['.ts', '.tsx', '.js', '.jsx'];
 
-  for (const file of files) {
-    const full = join(dirPath, file);
+  function scanDir(currentDir: string): void {
+    let files: string[] = [];
+
     try {
-      if (statSync(full).isDirectory()) continue;
+      files = readdirSync(currentDir);
     } catch {
-      continue;
+      return;
     }
 
-    const ext = extname(file);
-    if (!supportedExts.includes(ext)) continue;
+    for (const file of files) {
+      const full = join(currentDir, file);
+      try {
+        if (statSync(full).isDirectory()) {
+          scanDir(full);
+          continue;
+        }
+      } catch {
+        continue;
+      }
 
-    let code: string;
-    try {
-      code = readFileSync(full, 'utf8');
-    } catch {
-      continue;
+      const ext = extname(file);
+      if (!supportedExts.includes(ext)) continue;
+
+      let code: string;
+      try {
+        code = readFileSync(full, 'utf8');
+      } catch {
+        continue;
+      }
+
+      const context = buildContext(full, code);
+      const result = ENGINE.runSync(context, 'after_generation');
+      allResults.push(result);
+
+      if (!asJson) printReport(result, true);
     }
-
-    const context = buildContext(full, code);
-    const result = ENGINE.runSync(context, 'after_generation');
-    allResults.push(result);
-
-    if (!asJson) printReport(result, true);
   }
+
+  scanDir(dirPath);
 
   if (asJson) {
     console.log(
@@ -362,6 +368,8 @@ switch (command) {
     for (let i = 0; i < initArgs.length; i++) {
       if (initArgs[i] === '--template' && initArgs[i + 1]) {
         template = initArgs[i + 1];
+      } else if (initArgs[i].startsWith('--template=')) {
+        template = initArgs[i].split('=')[1];
       }
     }
 
@@ -382,10 +390,11 @@ switch (command) {
     const templateConfig = templates[template] || templates.default;
 
     mkdirSync(archDir, { recursive: true });
+    mkdirSync(join(archDir, 'design'), { recursive: true });
     mkdirSync(join(archDir, 'rules'), { recursive: true });
 
     writeFileSync(
-      join(archDir, 'tokens.json'),
+      join(archDir, 'design', 'tokens.json'),
       JSON.stringify(
         {
           project: cwd.split('/').pop() || 'my-project',
