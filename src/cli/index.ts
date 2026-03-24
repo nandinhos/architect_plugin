@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /* eslint-disable no-console */
-import { execSync } from 'child_process';
+import { execFileSync } from 'child_process';
 import { readFileSync, readdirSync, statSync, mkdirSync, writeFileSync, existsSync } from 'fs';
 import { join, extname, basename } from 'path';
 import { ArchitectEngine } from '../engine/RuleEngine';
@@ -50,7 +50,7 @@ function buildContext(filePath: string, code: string): RuleContext {
 
 function getStagedDiff(): string {
   try {
-    return execSync('git diff --cached --name-only', { encoding: 'utf8' });
+    return execFileSync('git', ['diff', '--cached', '--name-only'], { encoding: 'utf8' });
   } catch {
     return '';
   }
@@ -58,7 +58,7 @@ function getStagedDiff(): string {
 
 function getFileDiff(filename: string): string {
   try {
-    return execSync(`git diff HEAD -- "${filename}"`, { encoding: 'utf8' });
+    return execFileSync('git', ['diff', 'HEAD', '--', filename], { encoding: 'utf8' });
   } catch {
     return '';
   }
@@ -162,7 +162,7 @@ function runOnStaged(asJson = false): void {
     if (!diff.trim()) continue;
 
     const context = buildContext(file, diff);
-    const result = ENGINE.runSync(context, 'pre_commit');
+    const result = ENGINE.runSync(context, 'after_generation');
     allResults.push(result);
 
     if (!asJson) printReport(result, true);

@@ -52,7 +52,7 @@ function buildContext(filePath, code) {
 }
 function getStagedDiff() {
     try {
-        return (0, child_process_1.execSync)('git diff --cached --name-only', { encoding: 'utf8' });
+        return (0, child_process_1.execFileSync)('git', ['diff', '--cached', '--name-only'], { encoding: 'utf8' });
     }
     catch {
         return '';
@@ -60,7 +60,7 @@ function getStagedDiff() {
 }
 function getFileDiff(filename) {
     try {
-        return (0, child_process_1.execSync)(`git diff HEAD -- "${filename}"`, { encoding: 'utf8' });
+        return (0, child_process_1.execFileSync)('git', ['diff', 'HEAD', '--', filename], { encoding: 'utf8' });
     }
     catch {
         return '';
@@ -148,7 +148,7 @@ function runOnStaged(asJson = false) {
         if (!diff.trim())
             continue;
         const context = buildContext(file, diff);
-        const result = ENGINE.runSync(context, 'pre_commit');
+        const result = ENGINE.runSync(context, 'after_generation');
         allResults.push(result);
         if (!asJson)
             printReport(result, true);
