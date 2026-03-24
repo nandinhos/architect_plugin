@@ -11,6 +11,7 @@ import { codeQualityRules } from '../rules/CodeQualityRules';
 import { loggingRules } from '../rules/LoggingRules';
 import { designRules } from '../rules/DesignRules';
 import tokens from '../engine/tokens';
+import { parseArgs, getTemplateFlag, getConfigSubArgs } from './parser';
 
 const ENGINE = new ArchitectEngine({ autoFix: false, failOn: 'high' });
 
@@ -301,13 +302,13 @@ function runOnDir(dirPath: string, asJson = false): void {
   }
 }
 
-const args = process.argv.slice(2);
-const command = args[0];
-const asJson = args.includes('--json');
+const parsed = parseArgs(process.argv);
+const command = parsed.command;
+const asJson = parsed.flags.json === true;
 
 switch (command) {
   case 'run': {
-    const target = args[1];
+    const target = parsed.target;
     if (!target) {
       console.log('Usage: architect run <file|directory> [--json]');
       process.exit(1);
@@ -342,13 +343,13 @@ switch (command) {
     break;
 
   case 'config': {
-    const configArgs = args.slice(1);
-    if (configArgs.length === 0) {
+    const configSub = getConfigSubArgs(process.argv.slice(2));
+    if (!configSub.action) {
       runConfig(asJson);
-    } else if (configArgs[0] === 'enable' && configArgs[1]) {
-      enableRule(configArgs[1]);
-    } else if (configArgs[0] === 'disable' && configArgs[1]) {
-      disableRule(configArgs[1]);
+    } else if (configSub.action === 'enable' && configSub.ruleId) {
+      enableRule(configSub.ruleId);
+    } else if (configSub.action === 'disable' && configSub.ruleId) {
+      disableRule(configSub.ruleId);
     } else {
       console.log('Usage:');
       console.log('  architect config                    Mostrar configuracao');
@@ -362,16 +363,7 @@ switch (command) {
   case 'init': {
     const cwd = process.cwd();
     const archDir = join(cwd, '.architect');
-    const initArgs = args.slice(1);
-    let template = 'default';
-
-    for (let i = 0; i < initArgs.length; i++) {
-      if (initArgs[i] === '--template' && initArgs[i + 1]) {
-        template = initArgs[i + 1];
-      } else if (initArgs[i].startsWith('--template=')) {
-        template = initArgs[i].split('=')[1];
-      }
-    }
+    const template = getTemplateFlag(process.argv.slice(2));
 
     const templates: Record<string, { primary: string; background: string; name: string }> = {
       default: { primary: '#6366F1', background: '#F9FAFB', name: 'Default Indigo' },
