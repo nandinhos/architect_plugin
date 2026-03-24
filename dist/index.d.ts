@@ -12,4 +12,5 @@ export { createTestRequiredRule } from './rules/TestRules';
 export { createAntiPatternRule } from './rules/CodeQualityRules';
 export { createNoConsoleRule } from './rules/LoggingRules';
 export { createDesignValidatorRule } from './rules/DesignRules';
+export { createRule } from './rules/RuleFactory';
 //# sourceMappingURL=index.d.ts.map

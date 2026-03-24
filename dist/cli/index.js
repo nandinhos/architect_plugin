@@ -26,6 +26,20 @@ ENGINE.registerRules([
     ...LoggingRules_1.loggingRules,
     ...(0, DesignRules_1.designRules)({ primary: tokens_1.default.dna.primary }),
 ]);
+function loadProjectConfig() {
+    const configPath = (0, path_1.join)(process.cwd(), '.architect', 'config.json');
+    if (!(0, fs_1.existsSync)(configPath))
+        return;
+    try {
+        const raw = (0, fs_1.readFileSync)(configPath, 'utf8');
+        const config = JSON.parse(raw);
+        ENGINE.loadConfig(config);
+    }
+    catch {
+        console.warn('  Aviso: .architect/config.json invalido. Usando configuracao padrao.');
+    }
+}
+loadProjectConfig();
 function detectLanguage(filePath) {
     const ext = (0, path_1.extname)(filePath).toLowerCase();
     const map = {
@@ -439,6 +453,7 @@ function enableRule(ruleId) {
     const rules = config.rules;
     rules[ruleId] = { enabled: true };
     (0, fs_1.writeFileSync)(configPath, JSON.stringify(config, null, 2));
+    ENGINE.enableRule(ruleId);
     console.log(`  Regra ${ruleId} habilitada.\n`);
 }
 function disableRule(ruleId) {
@@ -463,6 +478,7 @@ function disableRule(ruleId) {
     const rules = config.rules;
     rules[ruleId] = { enabled: false };
     (0, fs_1.writeFileSync)(configPath, JSON.stringify(config, null, 2));
+    ENGINE.disableRule(ruleId);
     console.log(`  Regra ${ruleId} desabilitada.\n`);
 }
 //# sourceMappingURL=index.js.map

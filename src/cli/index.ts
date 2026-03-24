@@ -22,6 +22,21 @@ ENGINE.registerRules([
   ...designRules({ primary: tokens.dna.primary }),
 ]);
 
+function loadProjectConfig(): void {
+  const configPath = join(process.cwd(), '.architect', 'config.json');
+  if (!existsSync(configPath)) return;
+
+  try {
+    const raw = readFileSync(configPath, 'utf8');
+    const config = JSON.parse(raw);
+    ENGINE.loadConfig(config);
+  } catch {
+    console.warn('  Aviso: .architect/config.json invalido. Usando configuracao padrao.');
+  }
+}
+
+loadProjectConfig();
+
 function detectLanguage(filePath: string): RuleContext['language'] {
   const ext = extname(filePath).toLowerCase();
   const map: Record<string, RuleContext['language']> = {
@@ -501,6 +516,7 @@ function enableRule(ruleId: string): void {
   rules[ruleId] = { enabled: true };
 
   writeFileSync(configPath, JSON.stringify(config, null, 2));
+  ENGINE.enableRule(ruleId);
   console.log(`  Regra ${ruleId} habilitada.\n`);
 }
 
@@ -530,6 +546,7 @@ function disableRule(ruleId: string): void {
   rules[ruleId] = { enabled: false };
 
   writeFileSync(configPath, JSON.stringify(config, null, 2));
+  ENGINE.disableRule(ruleId);
   console.log(`  Regra ${ruleId} desabilitada.\n`);
 }
 

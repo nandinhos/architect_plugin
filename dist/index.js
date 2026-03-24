@@ -14,7 +14,7 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createDesignValidatorRule = exports.createNoConsoleRule = exports.createAntiPatternRule = exports.createTestRequiredRule = exports.createPIIDetectionRule = exports.createXSSRule = exports.createEvalRule = exports.createSQLInjectionRule = exports.designRules = exports.loggingRules = exports.codeQualityRules = exports.testRules = exports.securityRules = exports.ArchitectEngine = exports.DecisionEngine = exports.RuleRegistry = void 0;
+exports.createRule = exports.createDesignValidatorRule = exports.createNoConsoleRule = exports.createAntiPatternRule = exports.createTestRequiredRule = exports.createPIIDetectionRule = exports.createXSSRule = exports.createEvalRule = exports.createSQLInjectionRule = exports.designRules = exports.loggingRules = exports.codeQualityRules = exports.testRules = exports.securityRules = exports.ArchitectEngine = exports.DecisionEngine = exports.RuleRegistry = void 0;
 __exportStar(require("./types"), exports);
 var RuleRegistry_1 = require("./engine/RuleRegistry");
 Object.defineProperty(exports, "RuleRegistry", { enumerable: true, get: function () { return RuleRegistry_1.RuleRegistry; } });
@@ -45,4 +45,6 @@ var LoggingRules_2 = require("./rules/LoggingRules");
 Object.defineProperty(exports, "createNoConsoleRule", { enumerable: true, get: function () { return LoggingRules_2.createNoConsoleRule; } });
 var DesignRules_2 = require("./rules/DesignRules");
 Object.defineProperty(exports, "createDesignValidatorRule", { enumerable: true, get: function () { return DesignRules_2.createDesignValidatorRule; } });
+var RuleFactory_1 = require("./rules/RuleFactory");
+Object.defineProperty(exports, "createRule", { enumerable: true, get: function () { return RuleFactory_1.createRule; } });
 //# sourceMappingURL=index.js.map
