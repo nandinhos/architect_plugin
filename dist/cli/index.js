@@ -39,7 +39,37 @@ function loadProjectConfig() {
         console.warn('  Aviso: .architect/config.json invalido. Usando configuracao padrao.');
     }
 }
+function loadCustomRules() {
+    const rulesDir = (0, path_1.join)(process.cwd(), '.architect', 'rules');
+    if (!(0, fs_1.existsSync)(rulesDir))
+        return;
+    let files;
+    try {
+        files = (0, fs_1.readdirSync)(rulesDir).filter((f) => f.endsWith('.js'));
+    }
+    catch {
+        return;
+    }
+    for (const file of files) {
+        const fullPath = (0, path_1.join)(rulesDir, file);
+        try {
+            // eslint-disable-next-line @typescript-eslint/no-require-imports
+            const mod = require(fullPath);
+            const rules = mod.default ?? mod.rules ?? mod;
+            const candidates = Array.isArray(rules) ? rules : [rules];
+            for (const rule of candidates) {
+                if (rule && typeof rule === 'object' && rule.id && rule.validate) {
+                    ENGINE.registerRule(rule);
+                }
+            }
+        }
+        catch (err) {
+            console.warn(`  Aviso: falha ao carregar regra de ${file}: ${err instanceof Error ? err.message : String(err)}`);
+        }
+    }
+}
 loadProjectConfig();
+loadCustomRules();
 function detectLanguage(filePath) {
     const ext = (0, path_1.extname)(filePath).toLowerCase();
     const map = {
@@ -377,7 +407,6 @@ switch (command) {
         break;
     }
     case 'health': {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
         const { ArchitectDashboard } = require('../components/ArchitectDashboard');
         const dashboard = new ArchitectDashboard({
             dna: { primary: tokens_1.default.dna.primary, background: tokens_1.default.dna.background },

@@ -35,7 +35,40 @@ function loadProjectConfig(): void {
   }
 }
 
+function loadCustomRules(): void {
+  const rulesDir = join(process.cwd(), '.architect', 'rules');
+  if (!existsSync(rulesDir)) return;
+
+  let files: string[];
+  try {
+    files = readdirSync(rulesDir).filter((f) => f.endsWith('.js'));
+  } catch {
+    return;
+  }
+
+  for (const file of files) {
+    const fullPath = join(rulesDir, file);
+    try {
+      const mod = require(fullPath);
+      const rules = mod.default ?? mod.rules ?? mod;
+
+      const candidates = Array.isArray(rules) ? rules : [rules];
+
+      for (const rule of candidates) {
+        if (rule && typeof rule === 'object' && rule.id && rule.validate) {
+          ENGINE.registerRule(rule);
+        }
+      }
+    } catch (err) {
+      console.warn(
+        `  Aviso: falha ao carregar regra de ${file}: ${err instanceof Error ? err.message : String(err)}`
+      );
+    }
+  }
+}
+
 loadProjectConfig();
+loadCustomRules();
 
 function detectLanguage(filePath: string): RuleContext['language'] {
   const ext = extname(filePath).toLowerCase();
