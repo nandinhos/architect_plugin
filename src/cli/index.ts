@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 /* eslint-disable no-console */
-import { execFileSync } from 'child_process';
-import { readFileSync, readdirSync, statSync, mkdirSync, writeFileSync, existsSync } from 'fs';
+import { statSync, readdirSync, mkdirSync, writeFileSync, existsSync } from 'fs';
 import { join, extname, basename } from 'path';
 import { ArchitectEngine } from '../engine/RuleEngine';
 import { RuleContext } from '../types';
@@ -12,6 +11,7 @@ import { loggingRules } from '../rules/LoggingRules';
 import { designRules } from '../rules/DesignRules';
 import tokens from '../engine/tokens';
 import { parseArgs, getTemplateFlag, getConfigSubArgs } from './parser';
+import { getStagedDiff, getFileDiff, readConfig, writeConfig, readSourceFile } from './adapters';
 
 const ENGINE = new ArchitectEngine({ autoFix: false, failOn: 'high' });
 
@@ -24,13 +24,11 @@ ENGINE.registerRules([
 ]);
 
 function loadProjectConfig(): void {
-  const configPath = join(process.cwd(), '.architect', 'config.json');
-  if (!existsSync(configPath)) return;
+  const config = readConfig();
+  if (Object.keys(config).length === 0) return;
 
   try {
-    const raw = readFileSync(configPath, 'utf8');
-    const config = JSON.parse(raw);
-    ENGINE.loadConfig(config);
+    ENGINE.loadConfig(config as Parameters<typeof ENGINE.loadConfig>[0]);
   } catch {
     console.warn('  Aviso: .architect/config.json invalido. Usando configuracao padrao.');
   }
@@ -97,22 +95,6 @@ function buildContext(filePath: string, code: string): RuleContext {
   };
 }
 
-function getStagedDiff(): string {
-  try {
-    return execFileSync('git', ['diff', '--cached', '--name-only'], { encoding: 'utf8' });
-  } catch {
-    return '';
-  }
-}
-
-function getFileDiff(filename: string): string {
-  try {
-    return execFileSync('git', ['diff', '--cached', 'HEAD', '--', filename], { encoding: 'utf8' });
-  } catch {
-    return '';
-  }
-}
-
 function printReport(
   result: ReturnType<typeof ENGINE.runSync>,
   verbose = false,
@@ -167,12 +149,8 @@ function printReport(
 }
 
 function runOnFile(filePath: string, asJson = false): void {
-  let code: string;
-  try {
-    code = readFileSync(filePath, 'utf8');
-  } catch {
-    return;
-  }
+  const code = readSourceFile(filePath);
+  if (code === null) return;
 
   const context = buildContext(filePath, code);
   const result = ENGINE.runSync(context, 'after_generation');
@@ -264,12 +242,8 @@ function runOnDir(dirPath: string, asJson = false): void {
       const ext = extname(file);
       if (!supportedExts.includes(ext)) continue;
 
-      let code: string;
-      try {
-        code = readFileSync(full, 'utf8');
-      } catch {
-        continue;
-      }
+      const code = readSourceFile(full);
+      if (code === null) continue;
 
       const context = buildContext(full, code);
       const result = ENGINE.runSync(context, 'after_generation');
@@ -509,17 +483,7 @@ switch (command) {
 }
 
 function runConfig(asJson: boolean): void {
-  const configPath = join(process.cwd(), '.architect', 'config.json');
-
-  let config: Record<string, unknown> = {};
-
-  if (existsSync(configPath)) {
-    try {
-      config = JSON.parse(readFileSync(configPath, 'utf8'));
-    } catch {
-      config = {};
-    }
-  }
+  const config = readConfig();
 
   if (asJson) {
     console.log(JSON.stringify(config, null, 2));
@@ -553,22 +517,7 @@ function runConfig(asJson: boolean): void {
 }
 
 function enableRule(ruleId: string): void {
-  const configPath = join(process.cwd(), '.architect', 'config.json');
-  const archDir = join(process.cwd(), '.architect');
-
-  if (!existsSync(archDir)) {
-    console.log('  Execute "architect init" primeiro.\n');
-    process.exit(1);
-  }
-
-  let config: Record<string, unknown> = {};
-  if (existsSync(configPath)) {
-    try {
-      config = JSON.parse(readFileSync(configPath, 'utf8'));
-    } catch {
-      config = {};
-    }
-  }
+  const config = readConfig();
 
   if (!config.rules) {
     config.rules = {};
@@ -577,28 +526,13 @@ function enableRule(ruleId: string): void {
   const rules = config.rules as Record<string, { enabled: boolean }>;
   rules[ruleId] = { enabled: true };
 
-  writeFileSync(configPath, JSON.stringify(config, null, 2));
+  writeConfig(config);
   ENGINE.enableRule(ruleId);
   console.log(`  Regra ${ruleId} habilitada.\n`);
 }
 
 function disableRule(ruleId: string): void {
-  const configPath = join(process.cwd(), '.architect', 'config.json');
-  const archDir = join(process.cwd(), '.architect');
-
-  if (!existsSync(archDir)) {
-    console.log('  Execute "architect init" primeiro.\n');
-    process.exit(1);
-  }
-
-  let config: Record<string, unknown> = {};
-  if (existsSync(configPath)) {
-    try {
-      config = JSON.parse(readFileSync(configPath, 'utf8'));
-    } catch {
-      config = {};
-    }
-  }
+  const config = readConfig();
 
   if (!config.rules) {
     config.rules = {};
@@ -607,7 +541,7 @@ function disableRule(ruleId: string): void {
   const rules = config.rules as Record<string, { enabled: boolean }>;
   rules[ruleId] = { enabled: false };
 
-  writeFileSync(configPath, JSON.stringify(config, null, 2));
+  writeConfig(config);
   ENGINE.disableRule(ruleId);
   console.log(`  Regra ${ruleId} desabilitada.\n`);
 }
