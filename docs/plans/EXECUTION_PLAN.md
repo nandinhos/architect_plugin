@@ -158,47 +158,39 @@ npm run build && npm test && npm run lint && npm run typecheck
 
 ## Stack 5 — AST ANALYZER [P2]
 
+**Status:** ✅ CONCLUÍDO
 **Responsável:** Code Quality Rules
 **Branch:** `feat/ast-improvements`
 **Risco se ignorar:** Arquivos React/TSX não são analisados corretamente
 
-- [ ] 5.1 — `src/rules/ASTAnalyzer.ts:57` — Detectar extensão — usar `ts.ScriptKind.TSX` para `.tsx`/`.jsx`, `TS` para `.ts`/`.js`
-- [ ] 5.2 — `src/rules/ASTAnalyzer.ts` — Adicionar detecção de `console.log` via AST (complementa LOG-001 regex)
-- [ ] 5.3 — `src/rules/ASTAnalyzer.ts` — Adicionar métrica de complexidade ciclomática básica (contar `if/else/switch/for/while` aninhados)
-- [ ] 5.4 — Tests — Arquivo `.tsx` com JSX válido não deve ter parse errors
-- [ ] 5.5 — Tests — Função com 3 `if` aninhados é flagged como alta complexidade
+- [x] 5.1 — `src/rules/ASTAnalyzer.ts` — `getScriptKind()` detecta `.tsx`/`.jsx` → TSX, demais → TS
+- [x] 5.2 — `src/rules/ASTAnalyzer.ts` — Detecção de `console.*` via AST (CQ-005)
+- [x] 5.3 — `src/rules/ASTAnalyzer.ts` — Complexidade ciclomática: if/for/while/switch/ternary/&&/|| (CQ-006)
+- [x] 5.4 — Tests — 3 testes TSX/JSX (parse, detecção de any em TSX)
+- [x] 5.5 — Tests — 5 testes complexidade (base, if, alta, loop, lógicos) + 3 testes console AST
 
-**Critério de aceite:** AST analyzer suporta React e detecta complexidade.
+**Critério de aceite:** ✅ AST analyzer suporta React e detecta complexidade.
 
-**Validação:**
-
-```bash
-npm run build && npm test && npm run lint && npm run typecheck
-```
+---
 
 ---
 
 ## Stack 6 — DASHBOARD INTEGRATION [P2]
 
+**Status:** ✅ CONCLUÍDO
 **Responsável:** Components
 **Branch:** `feat/dashboard`
 **Depende de:** Stack 3
 **Risco se ignorar:** Classe `ArchitectDashboard` existe mas nunca é usada
 
-- [ ] 6.1 — `src/cli/index.ts` — Adicionar comando `architect health` que instancia `ArchitectDashboard`, verifica 3 protocolos, mostra score
-- [ ] 6.2 — `src/components/ArchitectDashboard.ts` — Adicionar método `getDetailedStatus()` com protocolos ativos/inativos e razão
-- [ ] 6.3 — `src/components/ArchitectDashboard.ts` — Verificar existência real de `.architect/design/tokens.json` (design), regras segurança ativas (security), `.architect/skills/` (senior)
-- [ ] 6.4 — `src/cli/index.ts` — Adicionar `architect health --json` para CI/CD
-- [ ] 6.5 — Tests — Projeto com 3 protocolos ativos retorna score 100
-- [ ] 6.6 — Tests — Projeto sem `.architect/` retorna score 0
+- [x] 6.1 — `src/cli/index.ts` — Comando `architect health` com score e status por protocolo
+- [x] 6.2 — `src/components/ArchitectDashboard.ts` — `getDetailedStatus()` com `ProtocolDetail[]`
+- [x] 6.3 — Verificação real via `existsSync` de tokens.json, rules.md, senior-engineer.md
+- [x] 6.4 — `architect health --json` para CI/CD (DetailedStatus completo)
+- [x] 6.5 — Tests — score 100 com todos protocolos, score parcial, score 0
+- [x] 6.6 — Tests — razão informativa para cada protocolo (6 testes novos)
 
-**Critério de aceite:** `architect health` mostra status real do projeto.
-
-**Validação:**
-
-```bash
-npm run build && npm test && npm run lint && npm run typecheck
-```
+**Critério de aceite:** ✅ `architect health` mostra status real do projeto.
 
 ---
 
@@ -272,8 +264,8 @@ npm run test:coverage
 | 1      | Stack 2 (Triggers)     | ✅ Concluído | 2026-03-23 | after_generation para staged     |
 | 2      | Stack 3 (Config)       | ✅ Concluído | 2026-03-23 | loadConfig + enable/disable      |
 | 2      | Stack 4 (Custom Rules) | 🟡 Parcial   | 2026-03-23 | createRule pronto, loader adiado |
-| 3      | Stack 5 (AST)          | ⬜ Pendente  | —          | —                                |
-| 3      | Stack 6 (Dashboard)    | ⬜ Pendente  | —          | —                                |
+| 3      | Stack 5 (AST)          | ✅ Concluído | 2026-03-23 | TSX, console AST, complexidade   |
+| 3      | Stack 6 (Dashboard)    | ✅ Concluído | 2026-03-23 | getDetailedStatus, health cmd    |
 | 3      | Stack 7 (Testes)       | ⬜ Pendente  | —          | Herda 1.7, 2.3, 2.4              |
 | 4      | Stack 8 (Docs)         | ⬜ Pendente  | —          | —                                |
 
@@ -291,6 +283,15 @@ typecheck:  0 errors
 ```
 build:      ✅
 test:       74/74 passing
+lint:       0 errors
+typecheck:  0 errors
+```
+
+### Validação Sprint 3
+
+```
+build:      ✅
+test:       91/91 passing
 lint:       0 errors
 typecheck:  0 errors
 ```
