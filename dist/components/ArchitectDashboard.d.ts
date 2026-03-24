@@ -9,6 +9,16 @@ export interface ArchitectStatus {
     securityActive: boolean;
     seniorSkillActive: boolean;
 }
+export interface ProtocolDetail {
+    name: string;
+    active: boolean;
+    reason: string;
+}
+export interface DetailedStatus {
+    score: number;
+    protocols: ProtocolDetail[];
+    projectDir: string;
+}
 export declare class ArchitectDashboard {
     private tokens;
     constructor(tokens: DesignTokens);
@@ -18,5 +28,6 @@ export declare class ArchitectDashboard {
         backgroundColor: string;
         fontFamily: string;
     };
+    getDetailedStatus(projectDir?: string): DetailedStatus;
 }
 //# sourceMappingURL=ArchitectDashboard.d.ts.map
