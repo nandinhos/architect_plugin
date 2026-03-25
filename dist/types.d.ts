@@ -49,6 +49,10 @@ export interface EvaluationResult {
     };
     rulesEvaluated: number;
     triggeredBy: TriggerType;
+    timing?: {
+        totalMs: number;
+        rules: Record<string, number>;
+    };
 }
 export interface BehaviorRule {
     id: string;

@@ -11,10 +11,17 @@ export declare class ArchitectEngine {
     private registry;
     private decisionEngine;
     private config;
+    private cache;
     constructor(config?: EngineConfig);
+    private hashContent;
+    private getCached;
+    private setCache;
+    clearCache(): void;
     loadConfig(projectConfig: ProjectConfig): void;
     registerRule(rule: NonNullable<EngineConfig['rules']>[0]): void;
     registerRules(rules: NonNullable<EngineConfig['rules']>): void;
+    private executeRule;
+    private buildResult;
     run(context: RuleContext, trigger: TriggerType): Promise<EvaluationResult>;
     runSync(context: RuleContext, trigger: TriggerType): EvaluationResult;
     getRules(): ReturnType<RuleRegistry['getAll']>;

@@ -5,6 +5,8 @@ exports.createSQLInjectionRule = createSQLInjectionRule;
 exports.createEvalRule = createEvalRule;
 exports.createXSSRule = createXSSRule;
 exports.createPIIDetectionRule = createPIIDetectionRule;
+const SQLInjectionDetector_1 = require("./SQLInjectionDetector");
+const XSSDetector_1 = require("./XSSDetector");
 const SQL_PATTERNS = [
     {
         pattern: /SELECT\s+\*\s+FROM\s+\w+\s+WHERE\s+\w+\s*=\s*['"]?\s*\+/gi,
@@ -107,14 +109,45 @@ function createSQLInjectionRule() {
         name: 'SQL Injection Detection',
         trigger: 'after_generation',
         severity: 'critical',
-        description: 'Detecta padrões de SQL Injection via string concatenation',
+        description: 'Detecta padroes de SQL Injection via AST e regex',
         validate(context) {
-            const issues = findIssues(context.code, SQL_PATTERNS, context.filePath);
+            const { code, filePath, language } = context;
+            if (language !== 'typescript' && language !== 'javascript') {
+                const issues = findIssues(code, SQL_PATTERNS, filePath);
+                return {
+                    ruleId: 'SEC-001',
+                    ruleName: 'SQL Injection Detection',
+                    valid: issues.length === 0,
+                    issues,
+                };
+            }
+            // Tenta AST primeiro, fallback para regex
+            try {
+                const astIssues = (0, SQLInjectionDetector_1.detectSQLInjection)(code, filePath);
+                if (astIssues.length > 0) {
+                    return {
+                        ruleId: 'SEC-001',
+                        ruleName: 'SQL Injection Detection',
+                        valid: false,
+                        issues: astIssues.map((i) => ({
+                            code: i.code,
+                            message: i.message,
+                            line: i.line,
+                            severity: i.severity,
+                            file: filePath,
+                        })),
+                    };
+                }
+            }
+            catch {
+                // AST falhou, usar regex como fallback
+            }
+            const regexIssues = findIssues(code, SQL_PATTERNS, filePath);
             return {
                 ruleId: 'SEC-001',
                 ruleName: 'SQL Injection Detection',
-                valid: issues.length === 0,
-                issues,
+                valid: regexIssues.length === 0,
+                issues: regexIssues,
             };
         },
         enforce(context, result) {
@@ -165,14 +198,40 @@ function createXSSRule() {
         name: 'XSS Detection',
         trigger: 'after_generation',
         severity: 'critical',
-        description: 'Detecta padrões de Cross-Site Scripting (XSS) em código gerado',
+        description: 'Detecta padroes de Cross-Site Scripting (XSS) via AST e regex',
         validate(context) {
-            const issues = findIssues(context.code, XSS_PATTERNS, context.filePath);
+            const { code, filePath, language } = context;
+            if (language !== 'typescript' && language !== 'javascript') {
+                const issues = findIssues(code, XSS_PATTERNS, filePath);
+                return { ruleId: 'SEC-003', ruleName: 'XSS Detection', valid: issues.length === 0, issues };
+            }
+            // Tenta AST primeiro, fallback para regex
+            try {
+                const astIssues = (0, XSSDetector_1.detectXSS)(code, filePath);
+                if (astIssues.length > 0) {
+                    return {
+                        ruleId: 'SEC-003',
+                        ruleName: 'XSS Detection',
+                        valid: false,
+                        issues: astIssues.map((i) => ({
+                            code: i.code,
+                            message: i.message,
+                            line: i.line,
+                            severity: i.severity,
+                            file: filePath,
+                        })),
+                    };
+                }
+            }
+            catch {
+                // AST falhou, usar regex como fallback
+            }
+            const regexIssues = findIssues(code, XSS_PATTERNS, filePath);
             return {
                 ruleId: 'SEC-003',
                 ruleName: 'XSS Detection',
-                valid: issues.length === 0,
-                issues,
+                valid: regexIssues.length === 0,
+                issues: regexIssues,
             };
         },
         enforce(context, result) {
