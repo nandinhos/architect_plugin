@@ -205,42 +205,45 @@ Sprint 1 (correcoes) → Sprint 2 (refatoracao) → Sprint 3 (evolucao)
 
 ## Log de Execucao
 
-| Sprint | Tarefa    | Status       | Data       | Notas                                      |
-| ------ | --------- | ------------ | ---------- | ------------------------------------------ |
-| 1      | T1.1      | ✅ Concluído | 2026-03-24 | init cria design/tokens.json               |
-| 1      | T1.2      | ✅ Concluído | 2026-03-24 | getFileDiff usa --cached                   |
-| 1      | T1.3      | ✅ Concluído | 2026-03-24 | TEST-001 verifica existsSync               |
-| 1      | T1.4      | ✅ Concluído | 2026-03-24 | --template=valor funciona                  |
-| 1      | T1.5      | ✅ Concluído | 2026-03-24 | runOnDir recursivo via scanDir             |
-| 1      | T1.6      | ✅ Concluído | 2026-03-24 | JSDoc DecisionAction documenta semântica   |
-| 1      | T1.7      | ✅ Concluído | 2026-03-24 | ROADMAP_SENIOR.md criado                   |
-| 2      | T2.1      | ✅ Concluído | 2026-03-24 | cli/parser.ts criado                       |
-| 2      | T2.2      | ✅ Concluído | 2026-03-24 | cli/adapters.ts criado                     |
-| 2      | T2.3      | ✅ Concluído | 2026-03-24 | cli/presenter.ts criado                    |
-| 2      | T2.4      | ✅ Concluído | 2026-03-24 | DES-001 separado em 4 regras independentes |
-| 2      | T2.5      | ✅ Concluído | 2026-03-24 | tryFix remove duplicatas                   |
-| 2      | T2.6      | ✅ Concluído | 2026-03-24 | 24 testes unitários para parser e adapters |
-| 2      | T2.7      | ✅ Concluído | 2026-03-24 | Log atualizado                             |
-| 3      | T3.1-T3.7 | ⬜ Pendente  | —          | —                                          |
+| Sprint | Tarefa | Status       | Data       | Notas                                      |
+| ------ | ------ | ------------ | ---------- | ------------------------------------------ |
+| 1      | T1.1   | ✅ Concluído | 2026-03-24 | init cria design/tokens.json               |
+| 1      | T1.2   | ✅ Concluído | 2026-03-24 | getFileDiff usa --cached                   |
+| 1      | T1.3   | ✅ Concluído | 2026-03-24 | TEST-001 verifica existsSync               |
+| 1      | T1.4   | ✅ Concluído | 2026-03-24 | --template=valor funciona                  |
+| 1      | T1.5   | ✅ Concluído | 2026-03-24 | runOnDir recursivo via scanDir             |
+| 1      | T1.6   | ✅ Concluído | 2026-03-24 | JSDoc DecisionAction documenta semântica   |
+| 1      | T1.7   | ✅ Concluído | 2026-03-24 | ROADMAP_SENIOR.md criado                   |
+| 2      | T2.1   | ✅ Concluído | 2026-03-24 | cli/parser.ts criado                       |
+| 2      | T2.2   | ✅ Concluído | 2026-03-24 | cli/adapters.ts criado                     |
+| 2      | T2.3   | ✅ Concluído | 2026-03-24 | cli/presenter.ts criado                    |
+| 2      | T2.4   | ✅ Concluído | 2026-03-24 | DES-001 separado em 4 regras independentes |
+| 2      | T2.5   | ✅ Concluído | 2026-03-24 | tryFix remove duplicatas                   |
+| 2      | T2.6   | ✅ Concluído | 2026-03-24 | 24 testes unitários para parser e adapters |
+| 2      | T2.7   | ✅ Concluído | 2026-03-24 | Log atualizado                             |
+| 3      | T3.1   | ✅ Concluído | 2026-03-24 | SQL injection via AST                      |
+| 3      | T3.2   | ✅ Concluído | 2026-03-24 | XSS via AST                                |
+| 3      | T3.3   | ⬜ Stretch   | —          | Data-flow (adiado)                         |
+| 3      | T3.4   | ✅ Concluído | 2026-03-24 | Promise.all paralelismo                    |
+| 3      | T3.5   | ✅ Concluído | 2026-03-24 | Cache incremental SHA-256                  |
+| 3      | T3.6   | ✅ Concluído | 2026-03-24 | Telemetria tempo por regra                 |
+| 3      | T3.7   | ✅ Concluído | 2026-03-24 | Log atualizado                             |
 
-### Validação Sprint 1
+### Validação Sprint 3
 
 ```
 build:      ✅
-test:       118/118 passing
+test:       157/157 passing
 lint:       0 errors
 typecheck:  0 errors
 ```
 
-### Validação Sprint 2
+lint: 0 errors
+typecheck: 0 errors
 
-```
-build:      ✅
-test:       142/142 passing
-lint:       0 errors
-typecheck:  0 errors
 ```
 
 ---
 
 "Corrigir o basico antes de evoluir."
+```
