@@ -107,7 +107,11 @@ export class ArchitectEngine {
     this.registry.registerBatch(rules);
   }
 
-  private executeRule(rule: BehaviorRule, context: RuleContext): RuleResult {
+  private executeRule(
+    rule: BehaviorRule,
+    context: RuleContext
+  ): { result: RuleResult; ms: number } {
+    const start = performance.now();
     try {
       const result = rule.validate(context);
 
@@ -118,22 +122,36 @@ export class ArchitectEngine {
         }
       }
 
-      return result;
+      return { result, ms: performance.now() - start };
     } catch (error) {
       return {
-        ruleId: rule.id,
-        ruleName: rule.name,
-        valid: false,
-        issues: [
-          {
-            code: 'ENGINE-001',
-            message: `Rule "${rule.id}" threw an error: ${error instanceof Error ? error.message : String(error)}`,
-            severity: 'high',
-            file: context.filePath,
-          },
-        ],
+        result: {
+          ruleId: rule.id,
+          ruleName: rule.name,
+          valid: false,
+          issues: [
+            {
+              code: 'ENGINE-001',
+              message: `Rule "${rule.id}" threw an error: ${error instanceof Error ? error.message : String(error)}`,
+              severity: 'high',
+              file: context.filePath,
+            },
+          ],
+        },
+        ms: performance.now() - start,
       };
     }
+  }
+
+  private buildResult(
+    results: RuleResult[],
+    timingRules: Record<string, number>,
+    timingTotal: number,
+    trigger: TriggerType
+  ): EvaluationResult {
+    const base = this.decisionEngine.evaluate(results, trigger);
+    base.timing = { totalMs: Math.round(timingTotal * 100) / 100, rules: timingRules };
+    return base;
   }
 
   async run(context: RuleContext, trigger: TriggerType): Promise<EvaluationResult> {
@@ -154,11 +172,19 @@ export class ArchitectEngine {
       return result;
     }
 
-    const results: RuleResult[] = await Promise.all(
+    const startTotal = performance.now();
+    const executed = await Promise.all(
       rules.map((rule) => Promise.resolve(this.executeRule(rule, context)))
     );
+    const totalMs = performance.now() - startTotal;
 
-    const result = this.decisionEngine.evaluate(results, trigger);
+    const results = executed.map((e) => e.result);
+    const timingRules: Record<string, number> = {};
+    for (const e of executed) {
+      timingRules[e.result.ruleId] = Math.round(e.ms * 100) / 100;
+    }
+
+    const result = this.buildResult(results, timingRules, totalMs, trigger);
     this.setCache(context.filePath, context.code, trigger, result);
     return result;
   }
@@ -181,9 +207,17 @@ export class ArchitectEngine {
       return result;
     }
 
-    const results: RuleResult[] = rules.map((rule) => this.executeRule(rule, context));
+    const startTotal = performance.now();
+    const executed = rules.map((rule) => this.executeRule(rule, context));
+    const totalMs = performance.now() - startTotal;
 
-    const result = this.decisionEngine.evaluate(results, trigger);
+    const results = executed.map((e) => e.result);
+    const timingRules: Record<string, number> = {};
+    for (const e of executed) {
+      timingRules[e.result.ruleId] = Math.round(e.ms * 100) / 100;
+    }
+
+    const result = this.buildResult(results, timingRules, totalMs, trigger);
     this.setCache(context.filePath, context.code, trigger, result);
     return result;
   }
